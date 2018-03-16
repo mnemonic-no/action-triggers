@@ -38,8 +38,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- mnemonic dependencies -->
+    <mnemonic.commons.version>0.2.10</mnemonic.commons.version>
 
     <!-- external dependencies -->
+    <junit.version>4.12</junit.version>
 
     <!-- build dependencies -->
     <maven.clean.version>3.0.0</maven.clean.version>
@@ -57,7 +59,7 @@
   </properties>
 
   <modules>
-    <!-- added later -->
+    <module>api</module>
   </modules>
 
   <scm>
