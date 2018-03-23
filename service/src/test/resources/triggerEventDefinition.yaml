@@ -1,0 +1,37 @@
+---
+id: 123e4567-e89b-12d3-a456-426655441111
+service: service1
+name: event1
+publicPermission: allowPublicAccess
+roleBasedPermission: allowRoleBasedAccess
+privatePermission: allowPrivateAccess
+scopes:
+  scope1: scopePermission1
+  scope2: scopePermission2
+  scope3: scopePermission3
+
+---
+id: 123e4567-e89b-12d3-a456-426655442222
+service: service2
+name: event2
+publicPermission: allowPublicAccess
+roleBasedPermission: allowRoleBasedAccess
+privatePermission: allowPrivateAccess
+scopes:
+  scope1: scopePermission1
+  scope2: scopePermission2
+  scope3: scopePermission3
+
+---
+id: 123e4567-e89b-12d3-a456-426655443333
+service: service3
+name: event3
+publicPermission: allowPublicAccess
+roleBasedPermission: allowRoleBasedAccess
+privatePermission: allowPrivateAccess
+scopes:
+  scope1: scopePermission1
+  scope2: scopePermission2
+  scope3: scopePermission3
+
+...

@@ -1,0 +1,43 @@
+---
+id: 123e4567-e89b-12d3-a456-426655441111
+service: service1
+events: [ event1, event2, event3 ]
+organizations: [ 123e4567-e89b-12d3-a456-426655441111, 123e4567-e89b-12d3-a456-426655442222 ]
+scopes: [ scope1, scope2, scope3 ]
+accessMode: Public
+expression: someExpressionToEvaluate
+triggerAction: action1
+triggerParameters:
+  parameter1: value1
+  parameter2: value2
+  parameter3: value3
+
+---
+id: 123e4567-e89b-12d3-a456-426655442222
+service: service2
+events: [ event1, event2, event3 ]
+organizations: [ 123e4567-e89b-12d3-a456-426655441111, 123e4567-e89b-12d3-a456-426655442222 ]
+scopes: [ scope1, scope2, scope3 ]
+accessMode: RoleBased
+expression: someExpressionToEvaluate
+triggerAction: action2
+triggerParameters:
+  parameter1: value1
+  parameter2: value2
+  parameter3: value3
+
+---
+id: 123e4567-e89b-12d3-a456-426655443333
+service: service3
+events: [ event1, event2, event3 ]
+organizations: [ 123e4567-e89b-12d3-a456-426655441111, 123e4567-e89b-12d3-a456-426655442222 ]
+scopes: [ scope1, scope2, scope3 ]
+accessMode: Private
+expression: someExpressionToEvaluate
+triggerAction: action3
+triggerParameters:
+  parameter1: value1
+  parameter2: value2
+  parameter3: value3
+
+...
