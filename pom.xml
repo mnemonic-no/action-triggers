@@ -41,6 +41,8 @@
     <mnemonic.commons.version>0.2.10</mnemonic.commons.version>
 
     <!-- external dependencies -->
+    <jackson.version>2.9.4</jackson.version>
+    <javax.inject.version>1</javax.inject.version>
     <junit.version>4.12</junit.version>
 
     <!-- build dependencies -->
@@ -60,6 +62,7 @@
 
   <modules>
     <module>api</module>
+    <module>service</module>
   </modules>
 
   <scm>

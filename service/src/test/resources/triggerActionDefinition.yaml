@@ -1,0 +1,61 @@
+---
+id: 123e4567-e89b-12d3-a456-426655441111
+name: action1
+description: Longer description of an action definition
+triggerActionClass: no.mnemonic.services.triggers.action.ExampleAction
+requiredPermission: allowExampleAction
+initParameters:
+  parameter1: value1
+  parameter2: value2
+  parameter3: value3
+triggerParameters:
+  parameter1:
+    description: Longer description of paramter
+    required: true
+    defaultValue: null
+  parameter2:
+    description: Longer description of paramter
+    required: false
+    defaultValue: 1
+
+---
+id: 123e4567-e89b-12d3-a456-426655442222
+name: action2
+description: Longer description of an action definition
+triggerActionClass: no.mnemonic.services.triggers.action.ExampleAction
+requiredPermission: allowExampleAction
+initParameters:
+  parameter1: value1
+  parameter2: value2
+  parameter3: value3
+triggerParameters:
+  parameter1:
+    description: Longer description of paramter
+    required: true
+    defaultValue: null
+  parameter2:
+    description: Longer description of paramter
+    required: false
+    defaultValue: 1
+
+---
+id: 123e4567-e89b-12d3-a456-426655443333
+name: action3
+description: Longer description of an action definition
+triggerActionClass: no.mnemonic.services.triggers.action.ExampleAction
+requiredPermission: allowExampleAction
+initParameters:
+  parameter1: value1
+  parameter2: value2
+  parameter3: value3
+triggerParameters:
+  parameter1:
+    description: Longer description of paramter
+    required: true
+    defaultValue: null
+  parameter2:
+    description: Longer description of paramter
+    required: false
+    defaultValue: 1
+
+...
