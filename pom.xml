@@ -61,6 +61,7 @@
   </properties>
 
   <modules>
+    <module>action</module>
     <module>api</module>
     <module>service</module>
   </modules>
