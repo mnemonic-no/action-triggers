@@ -1,4 +1,4 @@
-package no.mnemonic.services.triggers.action;
+package no.mnemonic.services.triggers.action.exceptions;
 
 /**
  * Exception thrown for invalid or missing parameters passed to an action, either on init() or on trigger().

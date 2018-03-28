@@ -1,5 +1,9 @@
 package no.mnemonic.services.triggers.action;
 
+import no.mnemonic.services.triggers.action.exceptions.ParameterException;
+import no.mnemonic.services.triggers.action.exceptions.TriggerExecutionException;
+import no.mnemonic.services.triggers.action.exceptions.TriggerInitializationException;
+
 import java.util.Map;
 
 /**

@@ -1,4 +1,4 @@
-package no.mnemonic.services.triggers.action;
+package no.mnemonic.services.triggers.action.exceptions;
 
 /**
  * Exception thrown when an action could not be executed.
