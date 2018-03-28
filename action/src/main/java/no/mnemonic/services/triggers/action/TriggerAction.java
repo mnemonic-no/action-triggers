@@ -58,6 +58,9 @@ public interface TriggerAction extends AutoCloseable {
    * An implementation should throw a {@link ParameterException} if required parameters are missing or parameter values
    * are invalid. It should throw a {@link TriggerExecutionException} if the action could not be executed for any other
    * reason, for example if a required connection to a remote host could not be established.
+   * <p>
+   * This method might be called multiple times after the action was initialized once, even if a previous invocation
+   * failed. Implementation must be able to handle multiple calls and must be able to recover from failed invocations.
    *
    * @param triggerParameters Dynamic trigger parameters populated from a TriggerRule
    * @throws ParameterException        Thrown if parameters are missing or invalid
