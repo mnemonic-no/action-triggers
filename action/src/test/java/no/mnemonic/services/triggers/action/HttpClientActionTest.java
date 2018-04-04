@@ -127,7 +127,7 @@ public class HttpClientActionTest {
   public void testActionWithAdditionalHeaders() throws Exception {
     Map<String, String> triggerParameters = new HashMap<String, String>() {{
       put("url", String.format("http://localhost:%d/do", server.port()));
-      put("X-Custom-Header", "42");
+      put("header@X-Custom-Header", "42");
     }};
 
     server.stubFor(get("/do").willReturn(ok()));

@@ -42,7 +42,8 @@ import java.util.Set;
  * <li><b>method</b>: HTTP method to be used when making requests (optional, defaults to GET).</li>
  * <li><b>body</b>: Body send in request (optional).</li>
  * <li><b>contentType</b>: Media type of body data (optional, defaults to text/plain, ignored if body parameter is not specified).</li>
- * <li>All other parameters will be sent as additional request headers.</li>
+ * <li>Parameters starting with the prefix <b>header@</b> will be sent as additional request headers (without the prefix).</li>
+ * <li>All other parameters will be ignored.</li>
  * </ul>
  */
 public class HttpClientAction implements TriggerAction {
@@ -54,6 +55,7 @@ public class HttpClientAction implements TriggerAction {
   private static final String TRIGGER_PARAMETER_URL = "url";
   private static final String TRIGGER_PARAMETER_BODY = "body";
   private static final String TRIGGER_PARAMETER_CONTENT_TYPE = "contentType";
+  private static final String TRIGGER_PARAMETER_HEADER_PREFIX = "header@";
   private static final String DEFAULT_HTTP_METHOD = "GET";
   private static final Set<String> SUPPORTED_PROTOCOLS = Collections.unmodifiableSet(SetUtils.set("http", "https"));
 
@@ -118,22 +120,20 @@ public class HttpClientAction implements TriggerAction {
 
   private HttpClientBuilder applyProxySettings(HttpClientBuilder builder, Map<String, String> initParameters)
       throws ParameterException {
-    if (initParameters.containsKey(INIT_PARAMETER_PROXY)) {
-      String proxy = initParameters.get(INIT_PARAMETER_PROXY);
-      try {
-        HttpHost host = HttpHost.create(proxy);
+    if (!initParameters.containsKey(INIT_PARAMETER_PROXY)) return builder;
 
-        if (LOGGER.isDebug()) {
-          LOGGER.debug("Configured HTTP client to use proxy: %s", host.toURI());
-        }
+    String proxy = initParameters.get(INIT_PARAMETER_PROXY);
+    try {
+      HttpHost host = HttpHost.create(proxy);
 
-        return builder.setProxy(host);
-      } catch (Exception ex) {
-        throw new ParameterException(String.format("Provided proxy '%s' is invalid.", proxy), ex, INIT_PARAMETER_PROXY);
+      if (LOGGER.isDebug()) {
+        LOGGER.debug("Configured HTTP client to use proxy: %s", host.toURI());
       }
-    }
 
-    return builder;
+      return builder.setProxy(host);
+    } catch (Exception ex) {
+      throw new ParameterException(String.format("Provided proxy '%s' is invalid.", proxy), ex, INIT_PARAMETER_PROXY);
+    }
   }
 
   private HttpUriRequest createHttpRequest(Map<String, String> triggerParameters) throws ParameterException {
@@ -147,12 +147,11 @@ public class HttpClientAction implements TriggerAction {
         .setEntity(ObjectUtils.ifNotNull(body, b -> new StringEntity(b, contentType)))
         .build();
 
-    // All remaining parameters are considered headers.
-    triggerParameters.remove(TRIGGER_PARAMETER_METHOD);
-    triggerParameters.remove(TRIGGER_PARAMETER_URL);
-    triggerParameters.remove(TRIGGER_PARAMETER_BODY);
-    triggerParameters.remove(TRIGGER_PARAMETER_CONTENT_TYPE);
-    triggerParameters.forEach(request::addHeader);
+    // All parameters starting with "header@" are considered headers.
+    for (String parameter : triggerParameters.keySet()) {
+      if (!parameter.startsWith(TRIGGER_PARAMETER_HEADER_PREFIX)) continue;
+      request.addHeader(parameter.replaceFirst(TRIGGER_PARAMETER_HEADER_PREFIX, ""), triggerParameters.get(parameter));
+    }
 
     if (LOGGER.isDebug()) {
       LOGGER.debug("Created %s request to URL: %s", method, uri);
@@ -162,35 +161,33 @@ public class HttpClientAction implements TriggerAction {
   }
 
   private URI extractUri(Map<String, String> triggerParameters) throws ParameterException {
-    if (triggerParameters.containsKey(TRIGGER_PARAMETER_URL)) {
-      String url = triggerParameters.get(TRIGGER_PARAMETER_URL);
-      try {
-        // A URL is expected here as a parameter but HttpUriRequest takes a URI, thus, a new URL is constructed first
-        // to have stricter parsing and is converted to a URI afterwards satisfying HttpUriRequest.
-        URI result = new URL(url).toURI();
-        if (!SUPPORTED_PROTOCOLS.contains(result.getScheme())) {
-          throw new MalformedURLException(String.format("Protocol '%s' is not supported.", result.getScheme()));
-        }
-
-        return result;
-      } catch (Exception ex) {
-        throw new ParameterException(String.format("Provided URL '%s' is invalid.", url), ex, TRIGGER_PARAMETER_URL);
-      }
+    if (!triggerParameters.containsKey(TRIGGER_PARAMETER_URL)) {
+      throw new ParameterException("Required trigger parameter 'url' is missing.", TRIGGER_PARAMETER_URL);
     }
 
-    throw new ParameterException("Required trigger parameter 'url' is missing.", TRIGGER_PARAMETER_URL);
+    String url = triggerParameters.get(TRIGGER_PARAMETER_URL);
+    try {
+      // A URL is expected here as a parameter but HttpUriRequest takes a URI, thus, a new URL is constructed first
+      // to have stricter parsing and is converted to a URI afterwards satisfying HttpUriRequest.
+      URI result = new URL(url).toURI();
+      if (!SUPPORTED_PROTOCOLS.contains(result.getScheme())) {
+        throw new MalformedURLException(String.format("Protocol '%s' is not supported.", result.getScheme()));
+      }
+
+      return result;
+    } catch (Exception ex) {
+      throw new ParameterException(String.format("Provided URL '%s' is invalid.", url), ex, TRIGGER_PARAMETER_URL);
+    }
   }
 
   private ContentType extractContentType(Map<String, String> triggerParameters) throws ParameterException {
-    if (triggerParameters.containsKey(TRIGGER_PARAMETER_CONTENT_TYPE)) {
-      String contentType = triggerParameters.get(TRIGGER_PARAMETER_CONTENT_TYPE);
-      try {
-        return ContentType.parse(contentType);
-      } catch (Exception ex) {
-        throw new ParameterException(String.format("Provided content type '%s' is invalid.", contentType), ex, TRIGGER_PARAMETER_CONTENT_TYPE);
-      }
-    }
+    if (!triggerParameters.containsKey(TRIGGER_PARAMETER_CONTENT_TYPE)) return ContentType.DEFAULT_TEXT;
 
-    return ContentType.DEFAULT_TEXT;
+    String contentType = triggerParameters.get(TRIGGER_PARAMETER_CONTENT_TYPE);
+    try {
+      return ContentType.parse(contentType);
+    } catch (Exception ex) {
+      throw new ParameterException(String.format("Provided content type '%s' is invalid.", contentType), ex, TRIGGER_PARAMETER_CONTENT_TYPE);
+    }
   }
 }
