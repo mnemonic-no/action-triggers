@@ -29,19 +29,12 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
-
 /**
  * Engine checking TriggerEvents against TriggerRules and executing TriggerActions for matching TriggerRules.
  */
 class RuleEvaluationEngine implements MetricAspect {
 
   private static final Logger LOGGER = Logging.getLogger(RuleEvaluationEngine.class);
-  private static final Map<String, Integer> ACCESS_MODE_ORDER = MapUtils.map(
-      T("Public", 0),
-      T("RoleBased", 1),
-      T("Private", 2)
-  );
 
   private final AtomicLong matchingTriggerRulesCounter = new AtomicLong();
   private final AtomicLong successfulActionInvocationsCounter = new AtomicLong();
@@ -81,25 +74,49 @@ class RuleEvaluationEngine implements MetricAspect {
    */
   void evaluate(TriggerEvent event) {
     if (event == null) return;
+    debug("Start evaluating TriggerEvent with id = %s.", event.getId());
 
     // For now only verify that the corresponding TriggerEventDefinition exists.
     // This should later also verify that the required context parameters are set.
     if (fetchTriggerEventDefinition(event) == null) return;
 
     for (TriggerRule rule : fetchTriggerRules(event)) {
+      debug("Start evaluating rule [TriggerRule: %s, TriggerEvent: %s].", rule.getId(), event.getId());
+
       // The event's organization must be part of the rule's organizations.
-      if (!SetUtils.set(rule.getOrganizations(), OrganizationInfo::getId).contains(event.getOrganization())) continue;
+      if (!SetUtils.set(rule.getOrganizations(), OrganizationInfo::getId).contains(event.getOrganization())) {
+        logFailedStep(rule, event, "organization");
+        continue;
+      }
+      logSuccessfulStep(rule, event, "organization");
+
       // The access mode of the event must be covered by the access mode of the rule.
       // 1. Rule access mode of 'Public' requires event access mode 'Public'.
       // 2. Rule access mode of 'RoleBased' requires event access mode 'Public' or 'RoleBased'.
       // 3. Rule access mode of 'Private' requires event access mode 'Public', 'RoleBased' or 'Private'.
-      if (ACCESS_MODE_ORDER.get(rule.getAccessMode().name()) < ACCESS_MODE_ORDER.get(event.getAccessMode().name())) continue;
+      if (rule.getAccessMode().isLessRestricted(event.getAccessMode().name())) {
+        logFailedStep(rule, event, "access mode");
+        continue;
+      }
+      logSuccessfulStep(rule, event, "access mode");
+
       // Event scope is optional, but if set it must be part of the rule's scopes.
-      if (!StringUtils.isBlank(event.getScope()) && !SetUtils.set(rule.getScopes()).contains(event.getScope())) continue;
+      if (!StringUtils.isBlank(event.getScope()) && !SetUtils.set(rule.getScopes()).contains(event.getScope())) {
+        logFailedStep(rule, event, "scope");
+        continue;
+      }
+      logSuccessfulStep(rule, event, "scope");
+
       // The rule's expression must evaluate to 'true'.
-      if (!evaluateRuleExpression(rule, event)) continue;
-      // If all conditions are fulfilled trigger the rule's action.
+      if (!evaluateRuleExpression(rule, event)) {
+        logFailedStep(rule, event, "expression");
+        continue;
+      }
+      logSuccessfulStep(rule, event, "expression");
       matchingTriggerRulesCounter.incrementAndGet();
+
+      // If all conditions are fulfilled trigger the rule's action.
+      debug("Start triggering action [TriggerRule: %s, TriggerEvent: %s].", rule.getId(), event.getId());
       triggerAction(rule, event);
     }
   }
@@ -127,14 +144,19 @@ class RuleEvaluationEngine implements MetricAspect {
 
     try (TriggerAction action = loadTriggerAction(definition.getTriggerActionClass())) {
       if (action == null) return;
-      action.init(definition.getInitParameters());
-      action.trigger(evaluateTriggerParameters(definition, rule, event));
-      successfulActionInvocationsCounter.incrementAndGet();
 
-      if (LOGGER.isDebug()) {
-        LOGGER.debug("Successfully executed action [TriggerActionDefinition: %s, TriggerRule: %s, TriggerEvent: %s].",
-            definition.getId(), rule.getId(), event.getId());
-      }
+      debug("Initialize action [TriggerActionDefinition: %s, Initialization parameters: %s].",
+          definition.getId(), definition.getInitParameters());
+      action.init(definition.getInitParameters());
+
+      Map<String, String> triggerParameters = evaluateTriggerParameters(definition, rule, event);
+      debug("Execute action [TriggerActionDefinition: %s, Trigger parameters: %s].",
+          definition.getId(), triggerParameters);
+      action.trigger(triggerParameters);
+
+      debug("Successfully executed action [TriggerActionDefinition: %s, TriggerRule: %s, TriggerEvent: %s].",
+          definition.getId(), rule.getId(), event.getId());
+      successfulActionInvocationsCounter.incrementAndGet();
     } catch (ParameterException ex) {
       LOGGER.info(ex, "Could not initialize/execute action due to missing or invalid parameter " +
               "[TriggerActionDefinition: %s, TriggerRule: %s, TriggerEvent: %s, Parameter: %s].",
@@ -157,7 +179,7 @@ class RuleEvaluationEngine implements MetricAspect {
       }
       return TriggerAction.class.cast(triggerActionClass.newInstance());
     } catch (Exception ex) {
-      LOGGER.warning("Could not instantiate TriggerAction from class '%s'.", triggerAction);
+      LOGGER.warning(ex, "Could not instantiate TriggerAction from class '%s'.", triggerAction);
       failedActionInvocationsCounter.incrementAndGet();
       return null;
     }
@@ -190,6 +212,7 @@ class RuleEvaluationEngine implements MetricAspect {
 
   private TriggerEventDefinition fetchTriggerEventDefinition(TriggerEvent event) {
     try {
+      debug("Fetching TriggerEventDefinition for service '%s' and event '%s'.", event.getService(), event.getEvent());
       return service.getTriggerEventDefinition(new TriggerEventDefinitionGetByServiceEventRequest()
           .setService(event.getService())
           .setEvent(event.getEvent())
@@ -203,6 +226,7 @@ class RuleEvaluationEngine implements MetricAspect {
 
   private Iterable<TriggerRule> fetchTriggerRules(TriggerEvent event) {
     try {
+      debug("Fetching TriggerRules for service '%s' and event '%s'.", event.getService(), event.getEvent());
       return service.searchTriggerRules(new TriggerRuleSearchRequest()
           .addService(event.getService())
           .addEvent(event.getEvent())
@@ -216,6 +240,7 @@ class RuleEvaluationEngine implements MetricAspect {
 
   private TriggerActionDefinition fetchTriggerActionDefinition(String name) {
     try {
+      debug("Fetching TriggerActionDefinition for name '%s'.", name);
       return service.getTriggerActionDefinition(new TriggerActionDefinitionGetByNameRequest().setName(name));
     } catch (InvalidArgumentException | ObjectNotFoundException ex) {
       LOGGER.warning(ex, "Could not fetch TriggerActionDefinition for name '%s'.", name);
@@ -231,5 +256,21 @@ class RuleEvaluationEngine implements MetricAspect {
     JexlContext context = new MapContext();
     contextParameters.forEach(context::set);
     return context;
+  }
+
+  private void logSuccessfulStep(TriggerRule rule, TriggerEvent event, String step) {
+    debug("Successfully passed %s step of the rule evaluation [TriggerRule: %s, TriggerEvent: %s].",
+        step, rule.getId(), event.getId());
+  }
+
+  private void logFailedStep(TriggerRule rule, TriggerEvent event, String step) {
+    debug("Failed %s step of the rule evaluation [TriggerRule: %s, TriggerEvent: %s].",
+        step, rule.getId(), event.getId());
+  }
+
+  private void debug(String formattedMessage, Object... args) {
+    if (LOGGER.isDebug()) {
+      LOGGER.debug(formattedMessage, args);
+    }
   }
 }
