@@ -12,20 +12,6 @@
     <version>0.0.1-SNAPSHOT</version>
   </parent>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${maven.javadoc.version}</version>
-        <configuration>
-          <!-- Skip for now, otherwise javadoc generation fails. -->
-          <skip>true</skip>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
   <dependencies>
     <dependency>
       <groupId>no.mnemonic.services.triggers</groupId>
@@ -41,6 +27,11 @@
       <groupId>no.mnemonic.services.triggers</groupId>
       <artifactId>pipeline-api</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>no.mnemonic.commons</groupId>
+      <artifactId>component</artifactId>
+      <version>${mnemonic.commons.version}</version>
     </dependency>
     <dependency>
       <groupId>no.mnemonic.commons</groupId>
@@ -61,6 +52,11 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-jexl3</artifactId>
       <version>${commons.jexl.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <version>${javax.inject.version}</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
