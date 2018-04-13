@@ -12,7 +12,9 @@ import org.mockito.Mock;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import static no.mnemonic.services.triggers.pipeline.api.SubmissionException.ErrorCode.NoResourcesAvailable;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -50,6 +52,14 @@ public class InMemoryQueueWorkerTest {
   public void testValidateWithZeroWorkerThreadsFails() {
     ValidationContext context = new ValidationContext();
     worker.setNumberOfWorkerThreads(0)
+        .validate(context);
+    assertFalse(context.isValid());
+  }
+
+  @Test
+  public void testValidateWithZeroSubmissionWaitTimeFails() {
+    ValidationContext context = new ValidationContext();
+    worker.setSubmissionWaitTimeSeconds(0)
         .validate(context);
     assertFalse(context.isValid());
   }
@@ -127,6 +137,57 @@ public class InMemoryQueueWorkerTest {
       assertEquals(1L, worker.getMetrics().getSubMetrics("inMemoryQueueWorker").getData("totalCompletedTasks"));
       assertEquals(1L, worker.getMetrics().getSubMetrics("inMemoryQueueWorker").getData("totalFailedTasks"));
       verify(engine).evaluate(event);
+    } else {
+      fail("Rule evaluation task did not finish!");
+    }
+  }
+
+  @Test
+  public void testSubmitWithoutAvailableThread() {
+    doAnswer(i -> {
+      Thread.sleep(3_000);
+      return null;
+    }).when(engine).evaluate(any());
+
+    TestTriggerEvent event1 = new TestTriggerEvent();
+    TestTriggerEvent event2 = new TestTriggerEvent();
+
+    try {
+      worker.setNumberOfWorkerThreads(1)
+          .setSubmissionWaitTimeSeconds(1);
+      worker.startComponent();
+      worker.submit(event1);
+      worker.submit(event2);
+
+      fail("Worker did not throw SubmissionException!");
+    } catch (SubmissionException ex) {
+      assertEquals(NoResourcesAvailable, ex.getErrorCode());
+      verify(engine).evaluate(event1);
+      verify(engine, never()).evaluate(event2);
+    }
+  }
+
+  @Test
+  public void testSubmitMultipleEventsRateLimited() throws Exception {
+    AtomicInteger taskCounter = new AtomicInteger();
+    doAnswer(i -> {
+      Thread.sleep(1_000);
+      if (taskCounter.incrementAndGet() == 3) {
+        finishedSignal.set(true);
+      }
+      return null;
+    }).when(engine).evaluate(any());
+
+    worker.setNumberOfWorkerThreads(1);
+    worker.startComponent();
+    worker.submit(new TestTriggerEvent());
+    worker.submit(new TestTriggerEvent());
+    worker.submit(new TestTriggerEvent());
+
+    if (LambdaUtils.waitFor(finishedSignal::get, 10, TimeUnit.SECONDS)) {
+      assertEquals(3L, worker.getMetrics().getSubMetrics("inMemoryQueueWorker").getData("totalCompletedTasks"));
+      assertEquals(0L, worker.getMetrics().getSubMetrics("inMemoryQueueWorker").getData("totalFailedTasks"));
+      verify(engine, times(3)).evaluate(any());
     } else {
       fail("Rule evaluation task did not finish!");
     }
