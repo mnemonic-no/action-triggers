@@ -14,7 +14,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -277,73 +280,6 @@ public class RuleEvaluationEngineTest {
     mockFetchTriggerEventDefinition();
     mockFetchTriggerActionDefinition();
     return mockFetchTriggerRules(expression);
-  }
-
-  public static class TestTriggerEvent implements TriggerEvent {
-    private UUID organization = UUID.randomUUID();
-    private AccessMode accessMode = AccessMode.Public;
-    private String scope = "TestScope";
-    private Map<String, Object> contextParameters = new HashMap<>();
-
-    @Override
-    public UUID getId() {
-      return UUID.randomUUID();
-    }
-
-    @Override
-    public long getTimestamp() {
-      return 123456789;
-    }
-
-    @Override
-    public String getService() {
-      return "TestService";
-    }
-
-    @Override
-    public String getEvent() {
-      return "TestEvent";
-    }
-
-    @Override
-    public UUID getOrganization() {
-      return organization;
-    }
-
-    @Override
-    public AccessMode getAccessMode() {
-      return accessMode;
-    }
-
-    @Override
-    public String getScope() {
-      return scope;
-    }
-
-    @Override
-    public Map<String, ?> getContextParameters() {
-      return contextParameters;
-    }
-
-    private TestTriggerEvent setOrganization(UUID organization) {
-      this.organization = organization;
-      return this;
-    }
-
-    private TestTriggerEvent setAccessMode(AccessMode accessMode) {
-      this.accessMode = accessMode;
-      return this;
-    }
-
-    private TestTriggerEvent setScope(String scope) {
-      this.scope = scope;
-      return this;
-    }
-
-    private TestTriggerEvent addContextParameter(String parameter, Object value) {
-      this.contextParameters.put(parameter, value);
-      return this;
-    }
   }
 
   public static class TestTriggerAction implements TriggerAction {
