@@ -7,7 +7,7 @@
 
   <name>Action Triggers</name>
   <description>Common framework for executing dynamically defined actions based on custom service activity</description>
-  <url>https://github.com/mnemonic-no/action-triggers</url>
+  <url>https://github.com/mnemonic-no/act-triggers</url>
   <inceptionYear>2018</inceptionYear>
 
   <licenses>
@@ -73,9 +73,9 @@
   </modules>
 
   <scm>
-    <connection>scm:git:git://github.com/mnemonic-no/action-triggers.git</connection>
-    <developerConnection>scm:git:ssh://github.com:mnemonic-no/action-triggers.git</developerConnection>
-    <url>https://github.com/mnemonic-no/action-triggers</url>
+    <connection>scm:git:git://github.com/mnemonic-no/act-triggers.git</connection>
+    <developerConnection>scm:git:ssh://github.com:mnemonic-no/act-triggers.git</developerConnection>
+    <url>https://github.com/mnemonic-no/act-triggers</url>
     <tag>HEAD</tag>
   </scm>
 
