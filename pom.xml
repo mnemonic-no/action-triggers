@@ -59,6 +59,7 @@
     <maven.javadoc.version>3.0.0</maven.javadoc.version>
     <maven.license.version>1.14</maven.license.version>
     <maven.nexus.staging.version>1.6.8</maven.nexus.staging.version>
+    <maven.release.version>2.5.3</maven.release.version>
     <maven.resources.version>3.0.2</maven.resources.version>
     <maven.source.version>3.0.1</maven.source.version>
     <maven.surefire.version>2.21.0</maven.surefire.version>
@@ -123,6 +124,17 @@
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
           </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>${maven.release.version}</version>
+        <configuration>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
+          <resume>false</resume>
+          <pushChanges>false</pushChanges>
+          <localCheckout>true</localCheckout>
         </configuration>
       </plugin>
       <plugin>
