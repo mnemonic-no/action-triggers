@@ -38,16 +38,16 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.2.11</mnemonic.commons.version>
+    <mnemonic.commons.version>0.2.12</mnemonic.commons.version>
 
     <!-- external dependencies -->
     <commons.jexl.version>3.1</commons.jexl.version>
     <http.components.version>4.5.5</http.components.version>
-    <jackson.version>2.9.4</jackson.version>
+    <jackson.version>2.9.5</jackson.version>
     <javax.inject.version>1</javax.inject.version>
     <junit.version>4.12</junit.version>
-    <mockito.version>2.18.0</mockito.version>
-    <wiremock.version>2.16.0</wiremock.version>
+    <mockito.version>2.18.3</mockito.version>
+    <wiremock.version>2.17.0</wiremock.version>
 
     <!-- build dependencies -->
     <maven.clean.version>3.0.0</maven.clean.version>
