@@ -6,6 +6,8 @@ import org.apache.commons.jexl3.internal.Engine;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.Collection;
@@ -127,11 +129,11 @@ public class ReadOnlyUberspectTest {
     TestContextParameter param = new TestContextParameter()
         .setCollParam(Arrays.asList(1, 2, 3));
 
-    Writer result = new PrintableStringWriter();
+    Writer result = new StringWriter();
     JexlContext context = new MapContext();
     context.set("param", param);
     templateEngine.createTemplate("$$ for (var i : param.collParam) { $jexl.print(i); $jexl.print('.') }")
-        .evaluate(context, result);
+        .evaluate(context, new PrintWriter(result));
 
     assertEquals("1.2.3.", result.toString());
   }
