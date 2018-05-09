@@ -22,9 +22,13 @@ import no.mnemonic.services.triggers.api.request.v1.TriggerEventDefinitionGetByS
 import no.mnemonic.services.triggers.api.request.v1.TriggerRuleSearchRequest;
 import no.mnemonic.services.triggers.api.service.v1.TriggerAdministrationService;
 import no.mnemonic.services.triggers.pipeline.api.TriggerEvent;
+import no.mnemonic.services.triggers.pipeline.worker.jexl.ReadOnlyUberspect;
 import org.apache.commons.jexl3.*;
+import org.apache.commons.jexl3.internal.Engine;
 
+import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -51,6 +55,10 @@ class RuleEvaluationEngine implements MetricAspect {
     expressionEngine = new JexlBuilder()
         .silent(false)
         .strict(true)
+        // Protect evaluation against malicious expressions by putting the default uberspect inside a read-only sandbox.
+        // Couldn't find a better way to initialize the default uberspect than using the internal engine implementation.
+        // Be aware that this might break when upgrading JEXL.
+        .uberspect(new ReadOnlyUberspect(Engine.getUberspect(null, null)))
         .create();
     templateEngine = expressionEngine.createJxltEngine();
   }
@@ -196,9 +204,10 @@ class RuleEvaluationEngine implements MetricAspect {
     // Evaluate and add all trigger parameters defined in the rule (potentially overwriting the default value).
     for (Map.Entry<String, String> parameter : MapUtils.map(rule.getTriggerParameters()).entrySet()) {
       try {
-        StringWriter result = new StringWriter();
+        // StringWriter is wrapped inside a PrintWriter in order to support $jexl.print() statements.
+        Writer result = new StringWriter();
         templateEngine.createTemplate(parameter.getValue())
-            .evaluate(populateExpressionContext(event.getContextParameters()), result);
+            .evaluate(populateExpressionContext(event.getContextParameters()), new PrintWriter(result));
         evaluated.put(parameter.getKey(), result.toString());
       } catch (JexlException ex) {
         LOGGER.info(ex, "Could not evaluate expression for trigger parameter '%s' [TriggerRule: %s, TriggerEvent: %s].",
