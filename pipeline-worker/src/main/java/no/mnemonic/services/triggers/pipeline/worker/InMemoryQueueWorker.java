@@ -119,6 +119,7 @@ public class InMemoryQueueWorker implements LifecycleAspect, MetricAspect, Trigg
     } catch (InterruptedException ex) {
       LOGGER.info(ex, "Received interrupt, shutdown component.");
       stopComponent();
+      Thread.currentThread().interrupt();
       throw new SubmissionException(String.format("TriggerEvent with id = %s could not be accepted for processing. " +
           "Component is shutting down.", event.getId()), ex, ComponentUnavailable);
     }
