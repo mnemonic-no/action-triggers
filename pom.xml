@@ -41,12 +41,12 @@
     <jdk.version>1.8</jdk.version>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.2.19</mnemonic.commons.version>
+    <mnemonic.commons.version>0.2.21</mnemonic.commons.version>
 
     <!-- external dependencies -->
     <commons.jexl.version>3.1</commons.jexl.version>
     <http.components.version>4.5.8</http.components.version>
-    <jackson.version>2.9.8</jackson.version>
+    <jackson.version>2.9.9</jackson.version>
     <javax.inject.version>1</javax.inject.version>
     <junit.version>4.12</junit.version>
     <mockito.version>2.27.0</mockito.version>
