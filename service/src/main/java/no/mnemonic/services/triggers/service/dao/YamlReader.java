@@ -21,8 +21,9 @@ import java.util.List;
 public class YamlReader<T> {
 
   private static final Logger LOGGER = Logging.getLogger(YamlReader.class);
-  private static final ObjectMapper MAPPER = new YAMLMapper()
-      .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+  private static final ObjectMapper MAPPER = YAMLMapper.builder()
+      .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+      .build();
 
   private final Path filePath;
   private final Class<T> entityClass;
