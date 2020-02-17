@@ -3,7 +3,7 @@
   <groupId>no.mnemonic.services.triggers</groupId>
   <artifactId>parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.0.10</version>
+  <version>0.0.11-SNAPSHOT</version>
 
   <name>Action Triggers</name>
   <description>Common framework for executing dynamically defined actions based on custom service activity</description>
@@ -81,7 +81,7 @@
     <connection>scm:git:git://github.com/mnemonic-no/act-triggers.git</connection>
     <developerConnection>scm:git:ssh://github.com:mnemonic-no/act-triggers.git</developerConnection>
     <url>https://github.com/mnemonic-no/act-triggers</url>
-    <tag>parent-0.0.10</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <build>
