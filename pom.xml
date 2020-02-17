@@ -45,12 +45,12 @@
 
     <!-- external dependencies -->
     <commons.jexl.version>3.1</commons.jexl.version>
-    <http.components.version>4.5.10</http.components.version>
-    <jackson.version>2.9.10</jackson.version>
+    <http.components.version>4.5.11</http.components.version>
+    <jackson.version>2.10.2</jackson.version>
     <javax.inject.version>1</javax.inject.version>
-    <junit.version>4.12</junit.version>
-    <mockito.version>3.0.0</mockito.version>
-    <wiremock.version>2.25.0</wiremock.version>
+    <junit.version>4.13</junit.version>
+    <mockito.version>3.2.4</mockito.version>
+    <wiremock.version>2.26.0</wiremock.version>
 
     <!-- build dependencies -->
     <maven.clean.version>3.1.0</maven.clean.version>
@@ -248,11 +248,11 @@
       <distributionManagement>
         <repository>
           <id>mnemonic</id>
-          <url>http://artifactory.mnemonic.no/artifactory/mnemonic</url>
+          <url>https://artifactory.mnemonic.no/artifactory/mnemonic</url>
         </repository>
         <snapshotRepository>
           <id>mnemonic-snapshots</id>
-          <url>http://artifactory.mnemonic.no/artifactory/mnemonic-snapshots</url>
+          <url>https://artifactory.mnemonic.no/artifactory/mnemonic-snapshots</url>
         </snapshotRepository>
       </distributionManagement>
     </profile>
