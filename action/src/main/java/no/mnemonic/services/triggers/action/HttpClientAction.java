@@ -8,17 +8,19 @@ import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.services.triggers.action.exceptions.ParameterException;
 import no.mnemonic.services.triggers.action.exceptions.TriggerExecutionException;
 import no.mnemonic.services.triggers.action.exceptions.TriggerInitializationException;
-import org.apache.http.HttpHost;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.RequestBuilder;
-import org.apache.http.client.utils.HttpClientUtils;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.hc.client5.http.HttpResponseException;
+import org.apache.hc.client5.http.classic.methods.ClassicHttpRequests;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.Method;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.message.StatusLine;
+import org.apache.hc.core5.io.CloseMode;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -56,7 +58,6 @@ public class HttpClientAction implements TriggerAction {
   private static final String TRIGGER_PARAMETER_BODY = "body";
   private static final String TRIGGER_PARAMETER_CONTENT_TYPE = "contentType";
   private static final String TRIGGER_PARAMETER_HEADER_PREFIX = "header@";
-  private static final String DEFAULT_HTTP_METHOD = "GET";
   private static final Set<String> SUPPORTED_PROTOCOLS = Collections.unmodifiableSet(SetUtils.set("http", "https"));
 
   private CloseableHttpClient client;
@@ -93,13 +94,14 @@ public class HttpClientAction implements TriggerAction {
 
     try (CloseableHttpResponse response = client.execute(createHttpRequest(params))) {
       // Everything which is not a 2xx status code is considered an error. Also ignore any response body.
-      int code = response.getStatusLine().getStatusCode();
+      StatusLine statusLine = new StatusLine(response);
+      int code = statusLine.getStatusCode();
       if (!(code >= 200 && code < 300)) {
-        throw new HttpResponseException(code, String.format("Failed to execute HTTP request. Received response with status: %s", response.getStatusLine()));
+        throw new HttpResponseException(code, statusLine.getReasonPhrase());
       }
 
       if (LOGGER.isInfo()) {
-        LOGGER.info("Successfully executed HTTP request. Received response with status: %s", response.getStatusLine());
+        LOGGER.info("Successfully executed HTTP request. Received response with status: %s", statusLine);
       }
     } catch (ParameterException ex) {
       // If executing the HTTP request throws a ParameterException just log and re-throw it.
@@ -115,7 +117,7 @@ public class HttpClientAction implements TriggerAction {
 
   @Override
   public void close() {
-    HttpClientUtils.closeQuietly(client);
+    client.close(CloseMode.GRACEFUL);
   }
 
   private HttpClientBuilder applyProxySettings(HttpClientBuilder builder, Map<String, String> initParameters)
@@ -137,15 +139,13 @@ public class HttpClientAction implements TriggerAction {
   }
 
   private HttpUriRequest createHttpRequest(Map<String, String> triggerParameters) throws ParameterException {
-    String method = triggerParameters.getOrDefault(TRIGGER_PARAMETER_METHOD, DEFAULT_HTTP_METHOD);
+    Method method = extractMethod(triggerParameters);
     URI uri = extractUri(triggerParameters);
     String body = triggerParameters.get(TRIGGER_PARAMETER_BODY);
     ContentType contentType = extractContentType(triggerParameters);
 
-    HttpUriRequest request = RequestBuilder.create(method)
-        .setUri(uri)
-        .setEntity(ObjectUtils.ifNotNull(body, b -> new StringEntity(b, contentType)))
-        .build();
+    HttpUriRequest request = ClassicHttpRequests.create(method, uri);
+    request.setEntity(ObjectUtils.ifNotNull(body, b -> new StringEntity(b, contentType)));
 
     // All parameters starting with "header@" are considered headers.
     for (String parameter : triggerParameters.keySet()) {
@@ -158,6 +158,17 @@ public class HttpClientAction implements TriggerAction {
     }
 
     return request;
+  }
+
+  private Method extractMethod(Map<String, String> triggerParameters) throws ParameterException {
+    if (!triggerParameters.containsKey(TRIGGER_PARAMETER_METHOD)) return Method.GET;
+
+    String method = triggerParameters.get(TRIGGER_PARAMETER_METHOD);
+    try {
+      return Method.normalizedValueOf(method);
+    } catch (Exception ex) {
+      throw new ParameterException(String.format("Provided method '%s' is invalid.", method), ex, TRIGGER_PARAMETER_METHOD);
+    }
   }
 
   private URI extractUri(Map<String, String> triggerParameters) throws ParameterException {

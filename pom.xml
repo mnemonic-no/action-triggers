@@ -41,16 +41,16 @@
     <jdk.version>1.8</jdk.version>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.3.3</mnemonic.commons.version>
+    <mnemonic.commons.version>0.4.2</mnemonic.commons.version>
 
     <!-- external dependencies -->
     <commons.jexl.version>3.1</commons.jexl.version>
-    <http.components.version>4.5.11</http.components.version>
-    <jackson.version>2.10.2</jackson.version>
+    <http.components.version>5.0.3</http.components.version>
+    <jackson.version>2.12.0</jackson.version>
     <javax.inject.version>1</javax.inject.version>
-    <junit.version>4.13</junit.version>
-    <mockito.version>3.2.4</mockito.version>
-    <wiremock.version>2.26.0</wiremock.version>
+    <junit.version>4.13.1</junit.version>
+    <mockito.version>3.6.28</mockito.version>
+    <wiremock.version>2.27.2</wiremock.version>
 
     <!-- build dependencies -->
     <maven.clean.version>3.1.0</maven.clean.version>

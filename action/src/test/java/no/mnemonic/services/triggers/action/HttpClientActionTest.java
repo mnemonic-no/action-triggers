@@ -42,6 +42,20 @@ public class HttpClientActionTest {
   }
 
   @Test
+  public void testTriggerWithInvalidMethod() throws Exception {
+    Map<String, String> triggerParameters = new HashMap<String, String>() {{
+      put("method", "invalid");
+    }};
+
+    try {
+      triggerAction(null, triggerParameters);
+      fail();
+    } catch (ParameterException ex) {
+      assertEquals("method", ex.getParameter());
+    }
+  }
+
+  @Test
   public void testTriggerWithoutUrlSetting() throws Exception {
     try {
       triggerAction(null, null);
