@@ -5,6 +5,7 @@ import no.mnemonic.commons.logging.Logging;
 import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.MapUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
+import no.mnemonic.commons.utilities.lambda.LambdaUtils;
 import no.mnemonic.services.triggers.action.exceptions.ParameterException;
 import no.mnemonic.services.triggers.action.exceptions.TriggerExecutionException;
 import no.mnemonic.services.triggers.action.exceptions.TriggerInitializationException;
@@ -16,8 +17,10 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.Method;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.message.StatusLine;
 import org.apache.hc.core5.io.CloseMode;
@@ -97,6 +100,7 @@ public class HttpClientAction implements TriggerAction {
       StatusLine statusLine = new StatusLine(response);
       int code = statusLine.getStatusCode();
       if (!(code >= 200 && code < 300)) {
+        logResponse(code, response.getEntity());
         throw new HttpResponseException(code, statusLine.getReasonPhrase());
       }
 
@@ -154,7 +158,7 @@ public class HttpClientAction implements TriggerAction {
     }
 
     if (LOGGER.isDebug()) {
-      LOGGER.debug("Created %s request to URL: %s", method, uri);
+      LOGGER.debug("Created %s request to URL %s with body:%n%s", method, uri, body);
     }
 
     return request;
@@ -200,5 +204,14 @@ public class HttpClientAction implements TriggerAction {
     } catch (Exception ex) {
       throw new ParameterException(String.format("Provided content type '%s' is invalid.", contentType), ex, TRIGGER_PARAMETER_CONTENT_TYPE);
     }
+  }
+
+  private void logResponse(int statusCode, HttpEntity responseBody) {
+    if (!LOGGER.isDebug()) return;
+    // Just ignore any exceptions, logging the response shouldn't interrupt the ordinary method flow.
+    LambdaUtils.tryTo(
+        () -> LOGGER.debug("HTTP request failed with code %d and response:%n%s", statusCode, EntityUtils.toString(responseBody)),
+        ex -> LOGGER.debug(ex, "Failed to log response.")
+    );
   }
 }
