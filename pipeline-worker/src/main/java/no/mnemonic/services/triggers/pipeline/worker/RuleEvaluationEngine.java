@@ -22,6 +22,7 @@ import no.mnemonic.services.triggers.api.request.v1.TriggerEventDefinitionGetByS
 import no.mnemonic.services.triggers.api.request.v1.TriggerRuleSearchRequest;
 import no.mnemonic.services.triggers.api.service.v1.TriggerAdministrationService;
 import no.mnemonic.services.triggers.pipeline.api.TriggerEvent;
+import no.mnemonic.services.triggers.pipeline.worker.jexl.Formatters;
 import no.mnemonic.services.triggers.pipeline.worker.jexl.ReadOnlyUberspect;
 import org.apache.commons.jexl3.*;
 import org.apache.commons.jexl3.internal.Engine;
@@ -33,12 +34,17 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
+
 /**
  * Engine checking TriggerEvents against TriggerRules and executing TriggerActions for matching TriggerRules.
  */
 class RuleEvaluationEngine implements MetricAspect {
 
   private static final Logger LOGGER = Logging.getLogger(RuleEvaluationEngine.class);
+  private static final Map<String, Object> NAMESPACES = MapUtils.map(
+      T("formatters", new Formatters()) // Expose format methods through the "formatters" namespace.
+  );
 
   private final AtomicLong matchingTriggerRulesCounter = new AtomicLong();
   private final AtomicLong successfulActionInvocationsCounter = new AtomicLong();
@@ -55,6 +61,7 @@ class RuleEvaluationEngine implements MetricAspect {
     expressionEngine = new JexlBuilder()
         .silent(false)
         .strict(true)
+        .namespaces(NAMESPACES)
         // Protect evaluation against malicious expressions by putting the default uberspect inside a read-only sandbox.
         // Couldn't find a better way to initialize the default uberspect than using the internal engine implementation.
         // Be aware that this might break when upgrading JEXL.

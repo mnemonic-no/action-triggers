@@ -1,6 +1,7 @@
 package no.mnemonic.services.triggers.pipeline.worker.jexl;
 
 import no.mnemonic.commons.utilities.collections.CollectionUtils;
+import no.mnemonic.commons.utilities.collections.MapUtils;
 import org.apache.commons.jexl3.*;
 import org.apache.commons.jexl3.internal.Engine;
 import org.junit.Before;
@@ -13,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 
+import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
 import static org.junit.Assert.assertEquals;
 
 public class ReadOnlyUberspectTest {
@@ -26,6 +28,7 @@ public class ReadOnlyUberspectTest {
     expressionEngine = new JexlBuilder()
         .silent(false)
         .strict(true)
+        .namespaces(MapUtils.map(T("formatters", new Formatters())))
         .uberspect(new ReadOnlyUberspect(Engine.getUberspect(null, null)))
         .create();
     templateEngine = expressionEngine.createJxltEngine();
@@ -122,6 +125,20 @@ public class ReadOnlyUberspectTest {
         .evaluate(context);
 
     assertEquals(true, result);
+  }
+
+  @Test
+  public void testAllowTimestampFormatters() {
+    TestContextParameter param = new TestContextParameter()
+        .setIntParam(1619004469);
+
+    JexlContext context = new MapContext();
+    context.set("param", param);
+    Object iso8601 = expressionEngine.createExpression("formatters:formatAsISO8601(param.intParam * 1000)").evaluate(context);
+    Object custom = expressionEngine.createExpression("formatters:formatTimestamp(param.intParam * 1000, 'dd.MM.yyyy HH:mm:ss', 'UTC-3')").evaluate(context);
+
+    assertEquals("2021-04-21T11:27:49Z", iso8601);
+    assertEquals("21.04.2021 08:27:49", custom);
   }
 
   @Test

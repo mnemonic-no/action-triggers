@@ -44,7 +44,8 @@ public class ReadOnlyUberspect implements JexlUberspect {
 
   // Statically defines the allowed methods for a specific class.
   private static final Map<String, Collection<String>> ALLOWED_CLASS_METHODS = MapUtils.map(
-      T("java.io.Writer", SetUtils.set("print")) // Allows print() statements inside JEXL templates.
+      T("java.io.Writer", SetUtils.set("print")), // Allows print() statements inside JEXL templates.
+      T("no.mnemonic.services.triggers.pipeline.worker.jexl.Formatters", SetUtils.set("formatTimestamp", "formatAsISO8601"))
   );
 
   private final JexlUberspect parent;
