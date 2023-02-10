@@ -65,6 +65,11 @@ public class ReadOnlyUberspect implements JexlUberspect {
   }
 
   @Override
+  public ClassLoader getClassLoader() {
+    return parent.getClassLoader();
+  }
+
+  @Override
   public int getVersion() {
     return parent.getVersion();
   }

@@ -2,7 +2,6 @@ package no.mnemonic.services.triggers.action;
 
 import no.mnemonic.commons.logging.Logger;
 import no.mnemonic.commons.logging.Logging;
-import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.MapUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import no.mnemonic.commons.utilities.lambda.LambdaUtils;
@@ -10,18 +9,12 @@ import no.mnemonic.services.triggers.action.exceptions.ParameterException;
 import no.mnemonic.services.triggers.action.exceptions.TriggerExecutionException;
 import no.mnemonic.services.triggers.action.exceptions.TriggerInitializationException;
 import org.apache.hc.client5.http.HttpResponseException;
-import org.apache.hc.client5.http.classic.methods.ClassicHttpRequests;
-import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.HttpHost;
-import org.apache.hc.core5.http.Method;
+import org.apache.hc.core5.http.*;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.hc.core5.http.message.StatusLine;
 import org.apache.hc.core5.io.CloseMode;
 
@@ -95,18 +88,22 @@ public class HttpClientAction implements TriggerAction {
     // Copy trigger parameters into an internal variable, such that it's safe to change them.
     Map<String, String> params = MapUtils.map(triggerParameters);
 
-    try (CloseableHttpResponse response = client.execute(createHttpRequest(params))) {
-      // Everything which is not a 2xx status code is considered an error. Also ignore any response body.
-      StatusLine statusLine = new StatusLine(response);
-      int code = statusLine.getStatusCode();
-      if (!(code >= 200 && code < 300)) {
-        logResponse(code, response.getEntity());
-        throw new HttpResponseException(code, statusLine.getReasonPhrase());
-      }
+    try {
+      client.execute(createHttpRequest(params), response -> {
+        // Everything which is not a 2xx status code is considered an error. Also ignore any response body.
+        StatusLine statusLine = new StatusLine(response);
+        int code = statusLine.getStatusCode();
+        if (!(code >= 200 && code < 300)) {
+          logResponse(code, response.getEntity());
+          throw new HttpResponseException(code, statusLine.getReasonPhrase());
+        }
 
-      if (LOGGER.isInfo()) {
-        LOGGER.info("Successfully executed HTTP request. Received response with status: %s", statusLine);
-      }
+        if (LOGGER.isInfo()) {
+          LOGGER.info("Successfully executed HTTP request. Received response with status: %s", statusLine);
+        }
+
+        return response;
+      });
     } catch (ParameterException ex) {
       // If executing the HTTP request throws a ParameterException just log and re-throw it.
       LOGGER.warning(ex, "Could not execute HTTP request. Parameter '%s' is invalid", ex.getParameter());
@@ -142,26 +139,31 @@ public class HttpClientAction implements TriggerAction {
     }
   }
 
-  private HttpUriRequest createHttpRequest(Map<String, String> triggerParameters) throws ParameterException {
+  private ClassicHttpRequest createHttpRequest(Map<String, String> triggerParameters) throws ParameterException {
     Method method = extractMethod(triggerParameters);
     URI uri = extractUri(triggerParameters);
     String body = triggerParameters.get(TRIGGER_PARAMETER_BODY);
     ContentType contentType = extractContentType(triggerParameters);
 
-    HttpUriRequest request = ClassicHttpRequests.create(method, uri);
-    request.setEntity(ObjectUtils.ifNotNull(body, b -> new StringEntity(b, contentType)));
+    ClassicRequestBuilder requestBuilder = ClassicRequestBuilder.create(method.name())
+        .setUri(uri);
+
+    // Request body is optional.
+    if (body != null) {
+      requestBuilder.setEntity(body, contentType);
+    }
 
     // All parameters starting with "header@" are considered headers.
     for (String parameter : triggerParameters.keySet()) {
       if (!parameter.startsWith(TRIGGER_PARAMETER_HEADER_PREFIX)) continue;
-      request.addHeader(parameter.replaceFirst(TRIGGER_PARAMETER_HEADER_PREFIX, ""), triggerParameters.get(parameter));
+      requestBuilder.addHeader(parameter.replaceFirst(TRIGGER_PARAMETER_HEADER_PREFIX, ""), triggerParameters.get(parameter));
     }
 
     if (LOGGER.isDebug()) {
       LOGGER.debug("Created %s request to URL %s with body:%n%s", method, uri, body);
     }
 
-    return request;
+    return requestBuilder.build();
   }
 
   private Method extractMethod(Map<String, String> triggerParameters) throws ParameterException {

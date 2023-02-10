@@ -54,9 +54,9 @@
       <version>${commons.jexl.version}</version>
     </dependency>
     <dependency>
-      <groupId>javax.inject</groupId>
-      <artifactId>javax.inject</artifactId>
-      <version>${javax.inject.version}</version>
+      <groupId>jakarta.inject</groupId>
+      <artifactId>jakarta.inject-api</artifactId>
+      <version>${jakarta.inject.version}</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

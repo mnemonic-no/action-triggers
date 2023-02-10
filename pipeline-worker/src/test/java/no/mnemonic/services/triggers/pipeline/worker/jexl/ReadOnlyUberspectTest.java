@@ -26,6 +26,7 @@ public class ReadOnlyUberspectTest {
   public void setUp() {
     // Use same set up as RuleEvaluationEngine.
     expressionEngine = new JexlBuilder()
+        .safe(false)
         .silent(false)
         .strict(true)
         .namespaces(MapUtils.map(T("formatters", new Formatters())))
