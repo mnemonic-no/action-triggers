@@ -26,7 +26,7 @@ public class ReadOnlyUberspectTest {
   public void setUp() {
     // Use same set up as RuleEvaluationEngine.
     expressionEngine = new JexlBuilder()
-        .safe(false)
+        .safe(true)
         .silent(false)
         .strict(true)
         .namespaces(MapUtils.map(T("formatters", new Formatters())))
@@ -46,6 +46,33 @@ public class ReadOnlyUberspectTest {
         .evaluate(context);
 
     assertEquals(param.getIntParam(), result);
+  }
+
+  @Test
+  public void testAllowGetPropertyNested() {
+    NestedParameter nestedParam = new NestedParameter()
+        .setStrParam("42");
+    TestContextParameter param = new TestContextParameter()
+        .setNestedParam(nestedParam);
+
+    JexlContext context = new MapContext();
+    context.set("param", param);
+    Object result = expressionEngine.createExpression("param.nestedParam.strParam == '42'")
+        .evaluate(context);
+
+    assertEquals(true, result);
+  }
+
+  @Test
+  public void testAllowGetPropertyNestedNotFailingOnNull() {
+    TestContextParameter param = new TestContextParameter();
+
+    JexlContext context = new MapContext();
+    context.set("param", param);
+    Object result = expressionEngine.createExpression("param.nestedParam.strParam == '42'")
+        .evaluate(context);
+
+    assertEquals(false, result);
   }
 
   @Test
@@ -182,9 +209,19 @@ public class ReadOnlyUberspectTest {
   }
 
   public static class TestContextParameter {
+    private NestedParameter nestedParam;
     private Collection<?> collParam;
     private String strParam;
     private int intParam;
+
+    public NestedParameter getNestedParam() {
+      return nestedParam;
+    }
+
+    public TestContextParameter setNestedParam(NestedParameter nestedParam) {
+      this.nestedParam = nestedParam;
+      return this;
+    }
 
     public Collection<?> getCollParam() {
       return collParam;
@@ -244,6 +281,19 @@ public class ReadOnlyUberspectTest {
 
     public boolean endsWith(String s) {
       return strParam != null && strParam.endsWith(s);
+    }
+  }
+
+  public static class NestedParameter {
+    private String strParam;
+
+    public String getStrParam() {
+      return strParam;
+    }
+
+    public NestedParameter setStrParam(String strParam) {
+      this.strParam = strParam;
+      return this;
     }
   }
 }

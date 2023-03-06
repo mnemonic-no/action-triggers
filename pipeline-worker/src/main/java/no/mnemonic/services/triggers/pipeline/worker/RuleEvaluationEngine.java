@@ -59,7 +59,7 @@ class RuleEvaluationEngine implements MetricAspect {
   RuleEvaluationEngine(TriggerAdministrationService service) {
     this.service = ObjectUtils.notNull(service, "'service' is required!");
     expressionEngine = new JexlBuilder()
-        .safe(false)
+        .safe(true)
         .silent(false)
         .strict(true)
         .namespaces(NAMESPACES)

@@ -6,6 +6,8 @@ import no.mnemonic.commons.utilities.ObjectUtils;
 import no.mnemonic.commons.utilities.collections.MapUtils;
 import no.mnemonic.commons.utilities.collections.SetUtils;
 import org.apache.commons.jexl3.JexlArithmetic;
+import org.apache.commons.jexl3.JexlException;
+import org.apache.commons.jexl3.JexlInfo;
 import org.apache.commons.jexl3.JexlOperator;
 import org.apache.commons.jexl3.introspection.JexlMethod;
 import org.apache.commons.jexl3.introspection.JexlPropertyGet;
@@ -76,8 +78,8 @@ public class ReadOnlyUberspect implements JexlUberspect {
 
   @Override
   public JexlMethod getConstructor(Object ctorHandle, Object... args) {
-    LOGGER.info("Disallowed creation of '%s'.", ctorHandle);
-    return null; // Never allow the construction of new objects.
+    // Never allow the construction of new objects.
+    throw logAndCreateException(String.format("Disallowed creation of '%s'.", ctorHandle));
   }
 
   @Override
@@ -95,8 +97,7 @@ public class ReadOnlyUberspect implements JexlUberspect {
       }
     }
 
-    LOGGER.info("Disallowed calling method '%s' on class '%s'.", method, className);
-    return null;
+    throw logAndCreateException(String.format("Disallowed calling method '%s' on class '%s'.", method, className));
   }
 
   @Override
@@ -113,14 +114,14 @@ public class ReadOnlyUberspect implements JexlUberspect {
 
   @Override
   public JexlPropertySet getPropertySet(Object obj, Object identifier, Object arg) {
-    LOGGER.info("Disallowed setting property '%s' on class '%s'.", identifier, getClassName(obj));
-    return null; // Never allow setting any properties.
+    // Never allow setting any properties.
+    throw logAndCreateException(String.format("Disallowed setting property '%s' on class '%s'.", identifier, getClassName(obj)));
   }
 
   @Override
   public JexlPropertySet getPropertySet(List<PropertyResolver> resolvers, Object obj, Object identifier, Object arg) {
-    LOGGER.info("Disallowed setting property '%s' on class '%s'.", identifier, getClassName(obj));
-    return null; // Never allow setting any properties.
+    // Never allow setting any properties.
+    throw logAndCreateException(String.format("Disallowed setting property '%s' on class '%s'.", identifier, getClassName(obj)));
   }
 
   @Override
@@ -131,6 +132,11 @@ public class ReadOnlyUberspect implements JexlUberspect {
   @Override
   public JexlArithmetic.Uberspect getArithmetic(JexlArithmetic arithmetic) {
     return parent.getArithmetic(arithmetic);
+  }
+
+  private JexlException logAndCreateException(String msg) {
+    LOGGER.info(msg);
+    return new JexlException(new JexlInfo(), msg, null);
   }
 
   private String getClassName(Object obj) {
