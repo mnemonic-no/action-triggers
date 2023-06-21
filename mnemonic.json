@@ -1,0 +1,10 @@
+{
+  "projectName": "Action Triggers",
+  "projectPage": "https://github.com/mnemonic-no/act-triggers",
+  "systemOwner": "joakim",
+  "repositoryOwner": "konstantin",
+  "language": "java",
+  "criticality": "critical",
+  "policyExceptions": [
+  ]
+}
