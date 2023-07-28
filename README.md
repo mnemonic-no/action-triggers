@@ -10,7 +10,7 @@ create advanced system integration and to notify users about interesting events 
 
 ## Known issues
 
-See [Issues](https://github.com/mnemonic-no/act-triggers/issues).
+See [Issues](https://github.com/mnemonic-no/action-triggers/issues).
 
 ## Contributing
 
