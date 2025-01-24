@@ -10,40 +10,35 @@ import no.mnemonic.services.triggers.api.model.v1.*;
 import no.mnemonic.services.triggers.api.service.v1.TriggerAdministrationService;
 import no.mnemonic.services.triggers.pipeline.api.AccessMode;
 import no.mnemonic.services.triggers.pipeline.api.TriggerEvent;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.notNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class RuleEvaluationEngineTest {
 
   @Mock
   private static TriggerAction action;
   @Mock
   private TriggerAdministrationService service;
-
+  @InjectMocks
   private RuleEvaluationEngine engine;
 
-  @Before
-  public void setUp() {
-    initMocks(this);
-    engine = new RuleEvaluationEngine(service);
-  }
-
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testInitializeEngineWithoutServiceThrowsException() {
-    new RuleEvaluationEngine(null);
+    assertThrows(RuntimeException.class, () -> new RuleEvaluationEngine(null));
   }
 
   @Test
@@ -214,12 +209,13 @@ public class RuleEvaluationEngineTest {
       assertEquals("defaultValue", parameters.get("defaultParameter"));
       assertEquals("staticValue", parameters.get("staticParameter"));
       assertEquals("Hello World!", parameters.get("expressionParameter"));
-      assertEquals("" +
-              "The value 1 is under forty-two\n" +
-              "The value 3 is under forty-two\n" +
-              "The value 5 is under forty-two\n" +
-              "Life, the universe, and everything\n" +
-              "The value 169 is over forty-two\n",
+      assertEquals("""
+              The value 1 is under forty-two
+              The value 3 is under forty-two
+              The value 5 is under forty-two
+              Life, the universe, and everything
+              The value 169 is over forty-two
+              """,
           parameters.get("templateParameter"));
       return true;
     }));
@@ -231,7 +227,7 @@ public class RuleEvaluationEngineTest {
         .setService("TestService")
         .setName("TestEvent")
         .build();
-    when(service.getTriggerEventDefinition(any())).thenReturn(definition);
+    lenient().when(service.getTriggerEventDefinition(any())).thenReturn(definition);
   }
 
   private void mockFetchTriggerActionDefinition() throws Exception {
@@ -242,7 +238,7 @@ public class RuleEvaluationEngineTest {
         .addInitParameter("initParameter", "initValue")
         .addTriggerParameter("defaultParameter", ParameterDefinition.builder().setDefaultValue("defaultValue").build())
         .build();
-    when(service.getTriggerActionDefinition(any())).thenReturn(definition);
+    lenient().when(service.getTriggerActionDefinition(any())).thenReturn(definition);
   }
 
   private TriggerRule mockEvaluatingTriggerRules() throws Exception {
@@ -261,18 +257,19 @@ public class RuleEvaluationEngineTest {
         .setTriggerAction(TriggerActionDefinition.builder().setName("TestAction").build().toInfo())
         .addTriggerParameter("staticParameter", "staticValue")
         .addTriggerParameter("expressionParameter", "Hello ${name}!")
-        .addTriggerParameter("templateParameter", "" +
-            "$$ for(var x : [1, 3, 5, 42, 169]) {\n" +
-            "$$   if (x == 42) {\n" +
-            "Life, the universe, and everything\n" +
-            "$$   } else if (x > 42) {\n" +
-            "The value ${x} is over forty-two\n" +
-            "$$   } else {\n" +
-            "The value ${x} is under forty-two\n" +
-            "$$   }\n" +
-            "$$ }")
+        .addTriggerParameter("templateParameter", """
+            $$ for(var x : [1, 3, 5, 42, 169]) {
+            $$   if (x == 42) {
+            Life, the universe, and everything
+            $$   } else if (x > 42) {
+            The value ${x} is over forty-two
+            $$   } else {
+            The value ${x} is under forty-two
+            $$   }
+            $$ }
+            """)
         .build();
-    when(service.searchTriggerRules(any())).thenReturn(Collections.singletonList(rule));
+    lenient().when(service.searchTriggerRules(any())).thenReturn(Collections.singletonList(rule));
     return rule;
   }
 

@@ -1,72 +1,71 @@
 package no.mnemonic.services.triggers.service.dao;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.FileWriter;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class YamlReaderTest {
 
   private Path tmpYamlFile;
 
-  @Before
-  public void setUp() throws Exception {
-    tmpYamlFile = Files.createTempFile(UUID.randomUUID().toString(), ".yaml");
-  }
-
-  @After
-  public void cleanUp() throws Exception {
-    if (tmpYamlFile != null) Files.deleteIfExists(tmpYamlFile);
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testInitializeWithoutFilePath() {
-    new YamlReader<>(null, TriggerEventDefinitionEntity.class);
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testInitializeWithoutEntityClass() {
-    new YamlReader<>(Paths.get("/non/existing/file.yaml"), null);
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testInitializeWithNonExistingFile() {
-    new YamlReader<>(Paths.get("/non/existing/file.yaml"), TriggerEventDefinitionEntity.class);
+  @BeforeEach
+  public void setUp(@TempDir Path tempDir) {
+    tmpYamlFile = tempDir.resolve(UUID.randomUUID() + ".yaml");
   }
 
   @Test
-  public void testReadAllWithEmptyFile() {
+  public void testInitializeWithoutFilePath() {
+    assertThrows(RuntimeException.class, () -> new YamlReader<>(null, TriggerEventDefinitionEntity.class));
+  }
+
+  @Test
+  public void testInitializeWithoutEntityClass() {
+    assertThrows(RuntimeException.class, () -> new YamlReader<>(Paths.get("/non/existing/file.yaml"), null));
+  }
+
+  @Test
+  public void testInitializeWithNonExistingFile() {
+    assertThrows(IllegalArgumentException.class, () -> new YamlReader<>(Paths.get("/non/existing/file.yaml"), TriggerEventDefinitionEntity.class));
+  }
+
+  @Test
+  public void testReadAllWithEmptyFile() throws Exception {
+    writeContent("");
     YamlReader<TriggerEventDefinitionEntity> reader = new YamlReader<>(tmpYamlFile, TriggerEventDefinitionEntity.class);
     assertEquals(0, reader.readAll().size());
   }
 
   @Test
   public void testReadAllIgnoresUnknownProperty() throws Exception {
-    writeContent("id: 123e4567-e89b-12d3-a456-426655441111\n" +
-        "service: service\n" +
-        "name: name\n" +
-        "unknown: something");
+    writeContent("""
+        id: 123e4567-e89b-12d3-a456-426655441111
+        service: service
+        name: name
+        unknown: something
+        """);
     YamlReader<TriggerEventDefinitionEntity> reader = new YamlReader<>(tmpYamlFile, TriggerEventDefinitionEntity.class);
     assertEquals(1, reader.readAll().size());
   }
 
   @Test
   public void testReadAllSkipsInvalidEntity() throws Exception {
-    writeContent("---\n" +
-        "id: 123e4567-e89b-12d3-a456-426655441111\n" +
-        "---\n" +
-        "id: 123e4567-e89b-12d3-a456-426655442222\n" +
-        "service: service\n" +
-        "name: name");
+    writeContent("""
+        ---
+        id: 123e4567-e89b-12d3-a456-426655441111
+        ---
+        id: 123e4567-e89b-12d3-a456-426655442222
+        service: service
+        name: name
+        """);
     YamlReader<TriggerEventDefinitionEntity> reader = new YamlReader<>(tmpYamlFile, TriggerEventDefinitionEntity.class);
     assertEquals(1, reader.readAll().size());
   }
@@ -80,9 +79,11 @@ public class YamlReaderTest {
 
   @Test
   public void testReadAllTriggerEventDefinitionsMinimal() throws Exception {
-    writeContent("id: 123e4567-e89b-12d3-a456-426655441111\n" +
-        "service: service\n" +
-        "name: name");
+    writeContent("""
+        id: 123e4567-e89b-12d3-a456-426655441111
+        service: service
+        name: name
+        """);
     YamlReader<TriggerEventDefinitionEntity> reader = new YamlReader<>(tmpYamlFile, TriggerEventDefinitionEntity.class);
     assertEquals(1, reader.readAll().size());
   }
@@ -117,61 +118,73 @@ public class YamlReaderTest {
 
   @Test
   public void testReadAllTriggerActionDefinitionsMinimal() throws Exception {
-    writeContent("id: 123e4567-e89b-12d3-a456-426655441111\n" +
-        "name: name\n" +
-        "description: description\n" +
-        "triggerActionClass: triggerActionClass\n" +
-        "requiredPermission: requiredPermission");
+    writeContent("""
+        id: 123e4567-e89b-12d3-a456-426655441111
+        name: name
+        description: description
+        triggerActionClass: triggerActionClass
+        requiredPermission: requiredPermission
+        """);
     YamlReader<TriggerActionDefinitionEntity> reader = new YamlReader<>(tmpYamlFile, TriggerActionDefinitionEntity.class);
     assertEquals(1, reader.readAll().size());
   }
 
   @Test
   public void testReadAllTriggerActionDefinitionsMinimalMissingID() throws Exception {
-    writeContent("name: name\n" +
-        "description: description\n" +
-        "triggerActionClass: triggerActionClass\n" +
-        "requiredPermission: requiredPermission");
+    writeContent("""
+        name: name
+        description: description
+        triggerActionClass: triggerActionClass
+        requiredPermission: requiredPermission
+        """);
     YamlReader<TriggerActionDefinitionEntity> reader = new YamlReader<>(tmpYamlFile, TriggerActionDefinitionEntity.class);
     assertEquals(0, reader.readAll().size());
   }
 
   @Test
   public void testReadAllTriggerActionDefinitionsMinimalMissingName() throws Exception {
-    writeContent("id: 123e4567-e89b-12d3-a456-426655441111\n" +
-        "description: description\n" +
-        "triggerActionClass: triggerActionClass\n" +
-        "requiredPermission: requiredPermission");
+    writeContent("""
+        id: 123e4567-e89b-12d3-a456-426655441111
+        description: description
+        triggerActionClass: triggerActionClass
+        requiredPermission: requiredPermission
+        """);
     YamlReader<TriggerActionDefinitionEntity> reader = new YamlReader<>(tmpYamlFile, TriggerActionDefinitionEntity.class);
     assertEquals(0, reader.readAll().size());
   }
 
   @Test
   public void testReadAllTriggerActionDefinitionsMinimalMissingDescription() throws Exception {
-    writeContent("id: 123e4567-e89b-12d3-a456-426655441111\n" +
-        "name: name\n" +
-        "triggerActionClass: triggerActionClass\n" +
-        "requiredPermission: requiredPermission");
+    writeContent("""
+        id: 123e4567-e89b-12d3-a456-426655441111
+        name: name
+        triggerActionClass: triggerActionClass
+        requiredPermission: requiredPermission
+        """);
     YamlReader<TriggerActionDefinitionEntity> reader = new YamlReader<>(tmpYamlFile, TriggerActionDefinitionEntity.class);
     assertEquals(0, reader.readAll().size());
   }
 
   @Test
   public void testReadAllTriggerActionDefinitionsMinimalMissingTriggerActionClass() throws Exception {
-    writeContent("id: 123e4567-e89b-12d3-a456-426655441111\n" +
-        "name: name\n" +
-        "description: description\n" +
-        "requiredPermission: requiredPermission");
+    writeContent("""
+        id: 123e4567-e89b-12d3-a456-426655441111
+        name: name
+        description: description
+        requiredPermission: requiredPermission
+        """);
     YamlReader<TriggerActionDefinitionEntity> reader = new YamlReader<>(tmpYamlFile, TriggerActionDefinitionEntity.class);
     assertEquals(0, reader.readAll().size());
   }
 
   @Test
   public void testReadAllTriggerActionDefinitionsMinimalMissingRequiredPermission() throws Exception {
-    writeContent("id: 123e4567-e89b-12d3-a456-426655441111\n" +
-        "name: name\n" +
-        "description: description\n" +
-        "triggerActionClass: triggerActionClass");
+    writeContent("""
+        id: 123e4567-e89b-12d3-a456-426655441111
+        name: name
+        description: description
+        triggerActionClass: triggerActionClass
+        """);
     YamlReader<TriggerActionDefinitionEntity> reader = new YamlReader<>(tmpYamlFile, TriggerActionDefinitionEntity.class);
     assertEquals(0, reader.readAll().size());
   }
@@ -206,97 +219,113 @@ public class YamlReaderTest {
 
   @Test
   public void testReadAllTriggerRulesMinimal() throws Exception {
-    writeContent("id: 123e4567-e89b-12d3-a456-426655441111\n" +
-        "service: service\n" +
-        "events: [ event ]\n" +
-        "organizations: [ 123e4567-e89b-12d3-a456-426655441111 ]\n" +
-        "accessMode: Public\n" +
-        "expression: expression\n" +
-        "triggerAction: triggerAction");
+    writeContent("""
+        id: 123e4567-e89b-12d3-a456-426655441111
+        service: service
+        events: [ event ]
+        organizations: [ 123e4567-e89b-12d3-a456-426655441111 ]
+        accessMode: Public
+        expression: expression
+        triggerAction: triggerAction
+        """);
     YamlReader<TriggerRuleEntity> reader = new YamlReader<>(tmpYamlFile, TriggerRuleEntity.class);
     assertEquals(1, reader.readAll().size());
   }
 
   @Test
   public void testReadAllTriggerRulesMinimalMissingID() throws Exception {
-    writeContent("service: service\n" +
-        "events: [ event ]\n" +
-        "organizations: [ 123e4567-e89b-12d3-a456-426655441111 ]\n" +
-        "accessMode: Public\n" +
-        "expression: expression\n" +
-        "triggerAction: triggerAction");
+    writeContent("""
+        service: service
+        events: [ event ]
+        organizations: [ 123e4567-e89b-12d3-a456-426655441111 ]
+        accessMode: Public
+        expression: expression
+        triggerAction: triggerAction
+        """);
     YamlReader<TriggerRuleEntity> reader = new YamlReader<>(tmpYamlFile, TriggerRuleEntity.class);
     assertEquals(0, reader.readAll().size());
   }
 
   @Test
   public void testReadAllTriggerRulesMinimalMissingService() throws Exception {
-    writeContent("id: 123e4567-e89b-12d3-a456-426655441111\n" +
-        "events: [ event ]\n" +
-        "organizations: [ 123e4567-e89b-12d3-a456-426655441111 ]\n" +
-        "accessMode: Public\n" +
-        "expression: expression\n" +
-        "triggerAction: triggerAction");
+    writeContent("""
+        id: 123e4567-e89b-12d3-a456-426655441111
+        events: [ event ]
+        organizations: [ 123e4567-e89b-12d3-a456-426655441111 ]
+        accessMode: Public
+        expression: expression
+        triggerAction: triggerAction
+        """);
     YamlReader<TriggerRuleEntity> reader = new YamlReader<>(tmpYamlFile, TriggerRuleEntity.class);
     assertEquals(0, reader.readAll().size());
   }
 
   @Test
   public void testReadAllTriggerRulesMinimalMissingEvents() throws Exception {
-    writeContent("id: 123e4567-e89b-12d3-a456-426655441111\n" +
-        "service: service\n" +
-        "organizations: [ 123e4567-e89b-12d3-a456-426655441111 ]\n" +
-        "accessMode: Public\n" +
-        "expression: expression\n" +
-        "triggerAction: triggerAction");
+    writeContent("""
+        id: 123e4567-e89b-12d3-a456-426655441111
+        service: service
+        organizations: [ 123e4567-e89b-12d3-a456-426655441111 ]
+        accessMode: Public
+        expression: expression
+        triggerAction: triggerAction
+        """);
     YamlReader<TriggerRuleEntity> reader = new YamlReader<>(tmpYamlFile, TriggerRuleEntity.class);
     assertEquals(0, reader.readAll().size());
   }
 
   @Test
   public void testReadAllTriggerRulesMinimalMissingOrganizations() throws Exception {
-    writeContent("id: 123e4567-e89b-12d3-a456-426655441111\n" +
-        "service: service\n" +
-        "events: [ event ]\n" +
-        "accessMode: Public\n" +
-        "expression: expression\n" +
-        "triggerAction: triggerAction");
+    writeContent("""
+        id: 123e4567-e89b-12d3-a456-426655441111
+        service: service
+        events: [ event ]
+        accessMode: Public
+        expression: expression
+        triggerAction: triggerAction
+        """);
     YamlReader<TriggerRuleEntity> reader = new YamlReader<>(tmpYamlFile, TriggerRuleEntity.class);
     assertEquals(0, reader.readAll().size());
   }
 
   @Test
   public void testReadAllTriggerRulesMinimalMissingAccessMode() throws Exception {
-    writeContent("id: 123e4567-e89b-12d3-a456-426655441111\n" +
-        "service: service\n" +
-        "events: [ event ]\n" +
-        "organizations: [ 123e4567-e89b-12d3-a456-426655441111 ]\n" +
-        "expression: expression\n" +
-        "triggerAction: triggerAction");
+    writeContent("""
+        id: 123e4567-e89b-12d3-a456-426655441111
+        service: service
+        events: [ event ]
+        organizations: [ 123e4567-e89b-12d3-a456-426655441111 ]
+        expression: expression
+        triggerAction: triggerAction
+        """);
     YamlReader<TriggerRuleEntity> reader = new YamlReader<>(tmpYamlFile, TriggerRuleEntity.class);
     assertEquals(0, reader.readAll().size());
   }
 
   @Test
   public void testReadAllTriggerRulesMinimalMissingExpression() throws Exception {
-    writeContent("id: 123e4567-e89b-12d3-a456-426655441111\n" +
-        "service: service\n" +
-        "events: [ event ]\n" +
-        "organizations: [ 123e4567-e89b-12d3-a456-426655441111 ]\n" +
-        "accessMode: Public\n" +
-        "triggerAction: triggerAction");
+    writeContent("""
+        id: 123e4567-e89b-12d3-a456-426655441111
+        service: service
+        events: [ event ]
+        organizations: [ 123e4567-e89b-12d3-a456-426655441111 ]
+        accessMode: Public
+        triggerAction: triggerAction
+        """);
     YamlReader<TriggerRuleEntity> reader = new YamlReader<>(tmpYamlFile, TriggerRuleEntity.class);
     assertEquals(0, reader.readAll().size());
   }
 
   @Test
   public void testReadAllTriggerRulesMinimalMissingTriggerAction() throws Exception {
-    writeContent("id: 123e4567-e89b-12d3-a456-426655441111\n" +
-        "service: service\n" +
-        "events: [ event ]\n" +
-        "organizations: [ 123e4567-e89b-12d3-a456-426655441111 ]\n" +
-        "accessMode: Public\n" +
-        "expression: expression");
+    writeContent("""
+        id: 123e4567-e89b-12d3-a456-426655441111
+        service: service
+        events: [ event ]
+        organizations: [ 123e4567-e89b-12d3-a456-426655441111 ]
+        accessMode: Public
+        expression: expression
+        """);
     YamlReader<TriggerRuleEntity> reader = new YamlReader<>(tmpYamlFile, TriggerRuleEntity.class);
     assertEquals(0, reader.readAll().size());
   }

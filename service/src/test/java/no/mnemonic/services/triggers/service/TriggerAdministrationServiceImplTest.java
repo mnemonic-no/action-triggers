@@ -6,12 +6,12 @@ import no.mnemonic.services.triggers.api.model.v1.TriggerEventDefinition;
 import no.mnemonic.services.triggers.api.model.v1.TriggerRule;
 import no.mnemonic.services.triggers.api.request.v1.*;
 import no.mnemonic.services.triggers.api.service.v1.TriggerAdministrationService;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class TriggerAdministrationServiceImplTest {
 

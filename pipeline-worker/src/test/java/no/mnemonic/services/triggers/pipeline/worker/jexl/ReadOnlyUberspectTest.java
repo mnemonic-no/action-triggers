@@ -4,8 +4,8 @@ import no.mnemonic.commons.utilities.collections.CollectionUtils;
 import no.mnemonic.commons.utilities.collections.MapUtils;
 import org.apache.commons.jexl3.*;
 import org.apache.commons.jexl3.internal.Engine;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -15,14 +15,15 @@ import java.util.Collection;
 import java.util.Objects;
 
 import static no.mnemonic.commons.utilities.collections.MapUtils.Pair.T;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ReadOnlyUberspectTest {
 
   private JexlEngine expressionEngine;
   private JxltEngine templateEngine;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     // Use same set up as RuleEvaluationEngine.
     expressionEngine = new JexlBuilder()
@@ -30,7 +31,7 @@ public class ReadOnlyUberspectTest {
         .silent(false)
         .strict(true)
         .namespaces(MapUtils.map(T("formatters", new Formatters())))
-        .uberspect(new ReadOnlyUberspect(Engine.getUberspect(null, null)))
+        .uberspect(new ReadOnlyUberspect(Engine.getUberspect(null, null, null)))
         .create();
     templateEngine = expressionEngine.createJxltEngine();
   }
@@ -183,29 +184,30 @@ public class ReadOnlyUberspectTest {
     assertEquals("1.2.3.", result.toString());
   }
 
-  @Test(expected = JexlException.class)
+  @Test
   public void testDisallowCreatingNewObject() {
-    expressionEngine.createExpression("new('no.mnemonic.services.triggers.pipeline.worker.jexl.ReadOnlyUberspectTest$TestContextParameter')")
-        .evaluate(new MapContext());
+    assertThrows(JexlException.class, () -> expressionEngine
+        .createExpression("new('no.mnemonic.services.triggers.pipeline.worker.jexl.ReadOnlyUberspectTest$TestContextParameter')")
+        .evaluate(new MapContext()));
   }
 
-  @Test(expected = JexlException.class)
+  @Test
   public void testDisallowSetProperty() {
     JexlContext context = new MapContext();
     context.set("param", new TestContextParameter());
-    expressionEngine.createExpression("param.intParam = 1")
-        .evaluate(context);
+    assertThrows(JexlException.class,
+        () -> expressionEngine.createExpression("param.intParam = 1").evaluate(context));
   }
 
-  @Test(expected = JexlException.class)
+  @Test
   public void testDisallowCallingMethod() {
     TestContextParameter param = new TestContextParameter()
         .setStrParam("abc");
 
     JexlContext context = new MapContext();
     context.set("param", param);
-    expressionEngine.createExpression("param.strParam.concat('def')")
-        .evaluate(context);
+    assertThrows(JexlException.class,
+        () -> expressionEngine.createExpression("param.strParam.concat('def')").evaluate(context));
   }
 
   public static class TestContextParameter {

@@ -5,21 +5,23 @@ import no.mnemonic.commons.metrics.MetricsData;
 import no.mnemonic.commons.utilities.lambda.LambdaUtils;
 import no.mnemonic.services.triggers.api.service.v1.TriggerAdministrationService;
 import no.mnemonic.services.triggers.pipeline.api.SubmissionException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static no.mnemonic.services.triggers.pipeline.api.SubmissionException.ErrorCode.NoResourcesAvailable;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
+@ExtendWith(MockitoExtension.class)
 public class InMemoryQueueWorkerTest {
 
   @Mock
@@ -30,10 +32,9 @@ public class InMemoryQueueWorkerTest {
   private AtomicBoolean finishedSignal;
   private InMemoryQueueWorker worker;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
-    initMocks(this);
-    when(engine.getMetrics()).thenReturn(new MetricsData());
+    lenient().when(engine.getMetrics()).thenReturn(new MetricsData());
 
     finishedSignal = new AtomicBoolean(false);
     worker = new InMemoryQueueWorker(service)
@@ -41,7 +42,7 @@ public class InMemoryQueueWorkerTest {
     worker.startComponent();
   }
 
-  @After
+  @AfterEach
   public void cleanUp() {
     if (worker != null) {
       worker.stopComponent();
@@ -64,44 +65,44 @@ public class InMemoryQueueWorkerTest {
     assertFalse(context.isValid());
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void testSubmitWithoutThreadPoolThrowsException() throws Exception {
-    new InMemoryQueueWorker(service).submit(new TestTriggerEvent());
+  @Test
+  public void testSubmitWithoutThreadPoolThrowsException() {
+    assertThrows(IllegalStateException.class, () -> new InMemoryQueueWorker(service).submit(new TestTriggerEvent()));
   }
 
-  @Test(expected = SubmissionException.class)
-  public void testSubmitWithoutEventThrowsException() throws Exception {
-    worker.submit(null);
+  @Test
+  public void testSubmitWithoutEventThrowsException() {
+    assertThrows(SubmissionException.class, () -> worker.submit(null));
   }
 
-  @Test(expected = SubmissionException.class)
-  public void testSubmitEventWithoutIdThrowsException() throws Exception {
-    worker.submit(new TestTriggerEvent().setId(null));
+  @Test
+  public void testSubmitEventWithoutIdThrowsException() {
+    assertThrows(SubmissionException.class, () -> worker.submit(new TestTriggerEvent().setId(null)));
   }
 
-  @Test(expected = SubmissionException.class)
-  public void testSubmitEventWithoutTimestampThrowsException() throws Exception {
-    worker.submit(new TestTriggerEvent().setTimestamp(0));
+  @Test
+  public void testSubmitEventWithoutTimestampThrowsException() {
+    assertThrows(SubmissionException.class, () -> worker.submit(new TestTriggerEvent().setTimestamp(0)));
   }
 
-  @Test(expected = SubmissionException.class)
-  public void testSubmitEventWithoutServiceThrowsException() throws Exception {
-    worker.submit(new TestTriggerEvent().setService(""));
+  @Test
+  public void testSubmitEventWithoutServiceThrowsException() {
+    assertThrows(SubmissionException.class, () -> worker.submit(new TestTriggerEvent().setService("")));
   }
 
-  @Test(expected = SubmissionException.class)
-  public void testSubmitEventWithoutEventThrowsException() throws Exception {
-    worker.submit(new TestTriggerEvent().setEvent(""));
+  @Test
+  public void testSubmitEventWithoutEventThrowsException() {
+    assertThrows(SubmissionException.class, () -> worker.submit(new TestTriggerEvent().setEvent("")));
   }
 
-  @Test(expected = SubmissionException.class)
-  public void testSubmitEventWithoutOrganizationThrowsException() throws Exception {
-    worker.submit(new TestTriggerEvent().setOrganization(null));
+  @Test
+  public void testSubmitEventWithoutOrganizationThrowsException() {
+    assertThrows(SubmissionException.class, () -> worker.submit(new TestTriggerEvent().setOrganization(null)));
   }
 
-  @Test(expected = SubmissionException.class)
-  public void testSubmitEventWithoutAccessModeThrowsException() throws Exception {
-    worker.submit(new TestTriggerEvent().setAccessMode(null));
+  @Test
+  public void testSubmitEventWithoutAccessModeThrowsException() {
+    assertThrows(SubmissionException.class, () -> worker.submit(new TestTriggerEvent().setAccessMode(null)));
   }
 
   @Test

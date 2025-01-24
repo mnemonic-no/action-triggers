@@ -66,7 +66,7 @@ class RuleEvaluationEngine implements MetricAspect {
         // Protect evaluation against malicious expressions by putting the default uberspect inside a read-only sandbox.
         // Couldn't find a better way to initialize the default uberspect than using the internal engine implementation.
         // Be aware that this might break when upgrading JEXL.
-        .uberspect(new ReadOnlyUberspect(Engine.getUberspect(null, null)))
+        .uberspect(new ReadOnlyUberspect(Engine.getUberspect(null, null, null)))
         .create();
     templateEngine = expressionEngine.createJxltEngine();
   }
@@ -141,8 +141,8 @@ class RuleEvaluationEngine implements MetricAspect {
     try {
       Object result = expressionEngine.createExpression(rule.getExpression())
           .evaluate(populateExpressionContext(event.getContextParameters()));
-      if (result instanceof Boolean) {
-        return Boolean.class.cast(result);
+      if (result instanceof Boolean bool) {
+        return bool;
       } else {
         LOGGER.info("Expression for TriggerRule with id = %s did not return a boolean value.", rule.getId());
         return false;
@@ -193,7 +193,7 @@ class RuleEvaluationEngine implements MetricAspect {
         failedActionInvocationsCounter.incrementAndGet();
         return null;
       }
-      return TriggerAction.class.cast(triggerActionClass.newInstance());
+      return (TriggerAction) triggerActionClass.getDeclaredConstructor().newInstance();
     } catch (Exception ex) {
       LOGGER.warning(ex, "Could not instantiate TriggerAction from class '%s'.", triggerAction);
       failedActionInvocationsCounter.incrementAndGet();

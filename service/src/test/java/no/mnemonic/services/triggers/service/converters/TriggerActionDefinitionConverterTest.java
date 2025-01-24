@@ -5,13 +5,12 @@ import no.mnemonic.services.triggers.api.model.v1.ParameterDefinition;
 import no.mnemonic.services.triggers.api.model.v1.TriggerActionDefinition;
 import no.mnemonic.services.triggers.service.dao.ParameterDefinitionEntity;
 import no.mnemonic.services.triggers.service.dao.TriggerActionDefinitionEntity;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 import java.util.function.Function;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TriggerActionDefinitionConverterTest {
 
@@ -23,9 +22,9 @@ public class TriggerActionDefinitionConverterTest {
       .setFunctionResolver(functionResolver)
       .build();
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testInitializeWithoutFunctionResolver() {
-    TriggerActionDefinitionConverter.builder().build();
+    assertThrows(RuntimeException.class, () -> TriggerActionDefinitionConverter.builder().build());
   }
 
   @Test

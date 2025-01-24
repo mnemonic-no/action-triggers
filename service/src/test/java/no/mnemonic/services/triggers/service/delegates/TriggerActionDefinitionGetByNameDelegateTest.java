@@ -4,10 +4,9 @@ import no.mnemonic.services.triggers.api.exceptions.InvalidArgumentException;
 import no.mnemonic.services.triggers.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.services.triggers.api.model.v1.TriggerActionDefinition;
 import no.mnemonic.services.triggers.api.request.v1.TriggerActionDefinitionGetByNameRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TriggerActionDefinitionGetByNameDelegateTest extends AbstractDelegateTest {
 
@@ -16,33 +15,33 @@ public class TriggerActionDefinitionGetByNameDelegateTest extends AbstractDelega
       .setEntityConverter(createTriggerActionDefinitionEntityConverter())
       .build();
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testInitializeDelegateWithoutEntitiesSupplier() {
-    TriggerActionDefinitionGetByNameDelegate.builder()
+    assertThrows(RuntimeException.class, () -> TriggerActionDefinitionGetByNameDelegate.builder()
         .setEntityConverter(createTriggerActionDefinitionEntityConverter())
-        .build();
+        .build());
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testInitializeDelegateWithoutEntityConverter() {
-    TriggerActionDefinitionGetByNameDelegate.builder()
+    assertThrows(RuntimeException.class, () -> TriggerActionDefinitionGetByNameDelegate.builder()
         .setEntitiesSupplier(createTriggerActionDefinitionEntitiesSupplier())
-        .build();
+        .build());
   }
 
-  @Test(expected = InvalidArgumentException.class)
-  public void testHandleWithoutRequest() throws Exception {
-    delegate.handle(null);
+  @Test
+  public void testHandleWithoutRequest() {
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(null));
   }
 
-  @Test(expected = InvalidArgumentException.class)
-  public void testHandleWithoutNameParameter() throws Exception {
-    delegate.handle(new TriggerActionDefinitionGetByNameRequest());
+  @Test
+  public void testHandleWithoutNameParameter() {
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(new TriggerActionDefinitionGetByNameRequest()));
   }
 
-  @Test(expected = ObjectNotFoundException.class)
-  public void testHandleNameMismatch() throws Exception {
-    delegate.handle(new TriggerActionDefinitionGetByNameRequest().setName("something"));
+  @Test
+  public void testHandleNameMismatch() {
+    assertThrows(ObjectNotFoundException.class, () -> delegate.handle(new TriggerActionDefinitionGetByNameRequest().setName("something")));
   }
 
   @Test

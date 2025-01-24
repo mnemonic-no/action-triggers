@@ -38,19 +38,19 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- JDK compile target -->
-    <jdk.version>1.8</jdk.version>
+    <jdk.version>17</jdk.version>
 
     <!-- mnemonic dependencies -->
-    <mnemonic.commons.version>0.4.20</mnemonic.commons.version>
+    <mnemonic.commons.version>0.5.1</mnemonic.commons.version>
 
     <!-- external dependencies -->
-    <commons.jexl.version>3.2.1</commons.jexl.version>
-    <http.components.version>5.2.1</http.components.version>
-    <jackson.version>2.14.2</jackson.version>
+    <commons.jexl.version>3.4.0</commons.jexl.version>
+    <http.components.version>5.4.1</http.components.version>
+    <jackson.version>2.18.2</jackson.version>
     <jakarta.inject.version>1.0.5</jakarta.inject.version>
-    <junit.version>4.13.2</junit.version>
-    <mockito.version>4.11.0</mockito.version>
-    <wiremock.version>2.27.2</wiremock.version>
+    <junit.jupiter.version>5.11.4</junit.jupiter.version>
+    <mockito.version>5.15.2</mockito.version>
+    <wiremock.version>3.10.0</wiremock.version>
 
     <!-- build dependencies -->
     <maven.clean.version>3.1.0</maven.clean.version>
@@ -113,6 +113,9 @@
                 <requireMavenVersion>
                   <version>3.0.5</version>
                 </requireMavenVersion>
+                <requireJavaVersion>
+                  <version>17.0.0</version>
+                </requireJavaVersion>
               </rules>
             </configuration>
           </execution>
@@ -123,6 +126,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${maven.compiler.version}</version>
         <configuration>
+          <release>${jdk.version}</release>
           <source>${jdk.version}</source>
           <target>${jdk.version}</target>
           <compilerArgs>
@@ -231,9 +235,9 @@
           <includedLicenses>Apache 2|CDDL|Eclipse|ISC|MIT</includedLicenses>
           <!-- Consolidate license names. -->
           <licenseMerges>
-            <licenseMerge>Apache 2|Apache License 2.0|Apache Software License - Version 2.0|Apache License, Version 2.0|The Apache Software License, Version 2.0</licenseMerge>
+            <licenseMerge>Apache 2|Apache-2.0|Apache License 2.0|Apache Software License - Version 2.0|Apache License, Version 2.0|The Apache Software License, Version 2.0</licenseMerge>
             <licenseMerge>CDDL|CDDL 1.1|CDDL + GPLv2 with classpath exception</licenseMerge>
-            <licenseMerge>Eclipse|Eclipse Public License 1.0|Eclipse Public License - Version 1.0</licenseMerge>
+            <licenseMerge>Eclipse|Eclipse Public License 1.0|Eclipse Public License - Version 1.0|Eclipse Public License v2.0</licenseMerge>
             <licenseMerge>MIT|The MIT License</licenseMerge>
           </licenseMerges>
         </configuration>

@@ -140,8 +140,8 @@ public class ReadOnlyUberspect implements JexlUberspect {
   }
 
   private String getClassName(Object obj) {
-    if (obj instanceof Class) {
-      return Class.class.cast(obj).getName();
+    if (obj instanceof Class<?> clazz) {
+      return clazz.getName();
     }
 
     return ObjectUtils.ifNotNull(obj, o -> o.getClass().getName(), "null");

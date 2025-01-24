@@ -1,26 +1,24 @@
 package no.mnemonic.services.triggers.action;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 public class NoopTriggerActionTest {
 
   @Test
-  public void testNoopTriggerAction() {
-    Map<String, String> parameters = new HashMap<String, String>() {{
+  public void testNoopTriggerAction() throws Exception {
+    Map<String, String> parameters = new HashMap<>() {{
       put("a", "b");
       put("1", "2");
     }};
 
-    try (TriggerAction action = NoopTriggerAction.class.newInstance()) {
-      action.init(parameters);
-      action.trigger(parameters);
-    } catch (Exception ex) {
-      fail(ex.getMessage());
+    try (TriggerAction action = NoopTriggerAction.class.getDeclaredConstructor().newInstance()) {
+      assertDoesNotThrow(() -> action.init(parameters));
+      assertDoesNotThrow(() -> action.trigger(parameters));
     }
   }
 }

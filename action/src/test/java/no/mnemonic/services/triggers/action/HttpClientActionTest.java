@@ -1,102 +1,86 @@
 package no.mnemonic.services.triggers.action;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import no.mnemonic.services.triggers.action.exceptions.ParameterException;
 import no.mnemonic.services.triggers.action.exceptions.TriggerExecutionException;
-import org.apache.http.entity.ContentType;
-import org.junit.Rule;
-import org.junit.Test;
+import org.apache.hc.core5.http.ContentType;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class HttpClientActionTest {
 
-  @Rule
-  public WireMockRule server = new WireMockRule(options().dynamicPort());
-  @Rule
-  public WireMockRule proxy = new WireMockRule(options().dynamicPort());
+  @RegisterExtension
+  static WireMockExtension server = WireMockExtension.newInstance()
+      .options(options().dynamicPort())
+      .build();
+  @RegisterExtension
+  static WireMockExtension proxy = WireMockExtension.newInstance()
+      .options(options().dynamicPort())
+      .build();
 
   @Test
-  public void testInitWithInvalidProxySetting() throws Exception {
-    Map<String, String> initParameters = new HashMap<String, String>() {{
+  public void testInitWithInvalidProxySetting() {
+    Map<String, String> initParameters = new HashMap<>() {{
       put("proxy", "123:invalid-url");
     }};
 
-    try {
-      new HttpClientAction().init(initParameters);
-      fail();
-    } catch (ParameterException ex) {
-      assertEquals("proxy", ex.getParameter());
-    }
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void testTriggerWithoutCallingInitFirst() throws Exception {
-    new HttpClientAction().trigger(null);
+    ParameterException ex = assertThrows(ParameterException.class, () -> new HttpClientAction().init(initParameters));
+    assertEquals("proxy", ex.getParameter());
   }
 
   @Test
-  public void testTriggerWithInvalidMethod() throws Exception {
-    Map<String, String> triggerParameters = new HashMap<String, String>() {{
+  public void testTriggerWithoutCallingInitFirst() {
+    assertThrows(IllegalStateException.class, () -> new HttpClientAction().trigger(null));
+  }
+
+  @Test
+  public void testTriggerWithInvalidMethod() {
+    Map<String, String> triggerParameters = new HashMap<>() {{
       put("method", "invalid");
     }};
 
-    try {
-      triggerAction(null, triggerParameters);
-      fail();
-    } catch (ParameterException ex) {
-      assertEquals("method", ex.getParameter());
-    }
+    ParameterException ex = assertThrows(ParameterException.class, () -> triggerAction(null, triggerParameters));
+    assertEquals("method", ex.getParameter());
   }
 
   @Test
-  public void testTriggerWithoutUrlSetting() throws Exception {
-    try {
-      triggerAction(null, null);
-      fail();
-    } catch (ParameterException ex) {
-      assertEquals("url", ex.getParameter());
-    }
+  public void testTriggerWithoutUrlSetting() {
+    ParameterException ex = assertThrows(ParameterException.class, () -> triggerAction(null, null));
+    assertEquals("url", ex.getParameter());
   }
 
   @Test
-  public void testTriggerWithInvalidUrlSetting() throws Exception {
-    Map<String, String> triggerParameters = new HashMap<String, String>() {{
+  public void testTriggerWithInvalidUrlSetting() {
+    Map<String, String> triggerParameters = new HashMap<>() {{
       put("url", "123:invalid-url");
     }};
 
-    try {
-      triggerAction(null, triggerParameters);
-      fail();
-    } catch (ParameterException ex) {
-      assertEquals("url", ex.getParameter());
-    }
+    ParameterException ex = assertThrows(ParameterException.class, () -> triggerAction(null, triggerParameters));
+    assertEquals("url", ex.getParameter());
   }
 
   @Test
-  public void testTriggerWithInvalidUrlProtocol() throws Exception {
-    Map<String, String> triggerParameters = new HashMap<String, String>() {{
+  public void testTriggerWithInvalidUrlProtocol() {
+    Map<String, String> triggerParameters = new HashMap<>() {{
       put("url", "ftp://example.org");
     }};
 
-    try {
-      triggerAction(null, triggerParameters);
-      fail();
-    } catch (ParameterException ex) {
-      assertEquals("url", ex.getParameter());
-    }
+    ParameterException ex = assertThrows(ParameterException.class, () -> triggerAction(null, triggerParameters));
+    assertEquals("url", ex.getParameter());
   }
 
   @Test
   public void testActionWithDefaultOptions() throws Exception {
-    Map<String, String> triggerParameters = new HashMap<String, String>() {{
-      put("url", String.format("http://localhost:%d/do", server.port()));
+    Map<String, String> triggerParameters = new HashMap<>() {{
+      put("url", String.format("http://localhost:%d/do", server.getPort()));
     }};
 
     server.stubFor(get("/do").willReturn(ok()));
@@ -106,8 +90,8 @@ public class HttpClientActionTest {
 
   @Test
   public void testActionWithTextBody() throws Exception {
-    Map<String, String> triggerParameters = new HashMap<String, String>() {{
-      put("url", String.format("http://localhost:%d/do", server.port()));
+    Map<String, String> triggerParameters = new HashMap<>() {{
+      put("url", String.format("http://localhost:%d/do", server.getPort()));
       put("method", "POST");
       put("body", "Hello World!");
     }};
@@ -122,8 +106,8 @@ public class HttpClientActionTest {
 
   @Test
   public void testActionWithJsonBody() throws Exception {
-    Map<String, String> triggerParameters = new HashMap<String, String>() {{
-      put("url", String.format("http://localhost:%d/do", server.port()));
+    Map<String, String> triggerParameters = new HashMap<>() {{
+      put("url", String.format("http://localhost:%d/do", server.getPort()));
       put("method", "POST");
       put("body", "{ \"a\" : \"b\" }");
       put("contentType", ContentType.APPLICATION_JSON.toString());
@@ -139,8 +123,8 @@ public class HttpClientActionTest {
 
   @Test
   public void testActionWithAdditionalHeaders() throws Exception {
-    Map<String, String> triggerParameters = new HashMap<String, String>() {{
-      put("url", String.format("http://localhost:%d/do", server.port()));
+    Map<String, String> triggerParameters = new HashMap<>() {{
+      put("url", String.format("http://localhost:%d/do", server.getPort()));
       put("header@X-Custom-Header", "42");
     }};
 
@@ -152,31 +136,27 @@ public class HttpClientActionTest {
   }
 
   @Test
-  public void testActionWithFailedResponse() throws Exception {
-    Map<String, String> triggerParameters = new HashMap<String, String>() {{
-      put("url", String.format("http://localhost:%d/do", server.port()));
+  public void testActionWithFailedResponse() {
+    Map<String, String> triggerParameters = new HashMap<>() {{
+      put("url", String.format("http://localhost:%d/do", server.getPort()));
     }};
 
     server.stubFor(get("/do").willReturn(unauthorized()));
-    try {
-      triggerAction(null, triggerParameters);
-      fail();
-    } catch (TriggerExecutionException ignored) {
-      server.verify(getRequestedFor(urlEqualTo("/do")));
-    }
+    assertThrows(TriggerExecutionException.class, () -> triggerAction(null, triggerParameters));
+    server.verify(getRequestedFor(urlEqualTo("/do")));
   }
 
   @Test
   public void testActionWithProxySettings() throws Exception {
-    Map<String, String> initParameters = new HashMap<String, String>() {{
-      put("proxy", String.format("http://localhost:%d", proxy.port()));
+    Map<String, String> initParameters = new HashMap<>() {{
+      put("proxy", String.format("http://localhost:%d", proxy.getPort()));
     }};
-    Map<String, String> triggerParameters = new HashMap<String, String>() {{
-      put("url", String.format("http://localhost:%d/do", server.port()));
+    Map<String, String> triggerParameters = new HashMap<>() {{
+      put("url", String.format("http://localhost:%d/do", server.getPort()));
     }};
 
     proxy.stubFor(get(anyUrl()).willReturn(aResponse()
-        .proxiedFrom(String.format("http://localhost:%d", server.port()))
+        .proxiedFrom(String.format("http://localhost:%d", server.getPort()))
         .withAdditionalRequestHeader("X-Proxy", "42")
     ));
     server.stubFor(get("/do").willReturn(ok()));
@@ -189,11 +169,11 @@ public class HttpClientActionTest {
 
   @Test
   public void testActionWithHttpRedirect() throws Exception {
-    Map<String, String> triggerParameters = new HashMap<String, String>() {{
-      put("url", String.format("http://localhost:%d/moved", proxy.port()));
+    Map<String, String> triggerParameters = new HashMap<>() {{
+      put("url", String.format("http://localhost:%d/moved", proxy.getPort()));
     }};
 
-    proxy.stubFor(get("/moved").willReturn(permanentRedirect(String.format("http://localhost:%d/do", server.port()))));
+    proxy.stubFor(get("/moved").willReturn(permanentRedirect(String.format("http://localhost:%d/do", server.getPort()))));
     server.stubFor(get("/do").willReturn(ok()));
     triggerAction(null, triggerParameters);
     proxy.verify(getRequestedFor(urlEqualTo("/moved")));
@@ -201,7 +181,7 @@ public class HttpClientActionTest {
   }
 
   private void triggerAction(Map<String, String> initParameters, Map<String, String> triggerParameters) throws Exception {
-    try (TriggerAction action = HttpClientAction.class.newInstance()) {
+    try (TriggerAction action = HttpClientAction.class.getDeclaredConstructor().newInstance()) {
       action.init(initParameters);
       action.trigger(triggerParameters);
     }

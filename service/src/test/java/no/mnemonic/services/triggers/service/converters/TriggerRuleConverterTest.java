@@ -5,14 +5,13 @@ import no.mnemonic.services.triggers.api.model.v1.TriggerActionDefinition;
 import no.mnemonic.services.triggers.api.model.v1.TriggerRule;
 import no.mnemonic.services.triggers.service.dao.AccessMode;
 import no.mnemonic.services.triggers.service.dao.TriggerRuleEntity;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TriggerRuleConverterTest {
 
@@ -26,18 +25,18 @@ public class TriggerRuleConverterTest {
       .setTriggerActionResolver(triggerActionResolver)
       .build();
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testInitializeWithoutOrganizationResolver() {
-    TriggerRuleConverter.builder()
+    assertThrows(RuntimeException.class, () -> TriggerRuleConverter.builder()
         .setTriggerActionResolver(triggerActionResolver)
-        .build();
+        .build());
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testInitializeWithoutTriggerActionResolver() {
-    TriggerRuleConverter.builder()
+    assertThrows(RuntimeException.class, () -> TriggerRuleConverter.builder()
         .setOrganizationResolver(organizationResolver)
-        .build();
+        .build());
   }
 
   @Test

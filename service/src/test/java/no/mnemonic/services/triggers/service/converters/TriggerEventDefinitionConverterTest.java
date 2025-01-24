@@ -3,13 +3,12 @@ package no.mnemonic.services.triggers.service.converters;
 import no.mnemonic.services.triggers.api.model.v1.FunctionInfo;
 import no.mnemonic.services.triggers.api.model.v1.TriggerEventDefinition;
 import no.mnemonic.services.triggers.service.dao.TriggerEventDefinitionEntity;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 import java.util.function.Function;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TriggerEventDefinitionConverterTest {
 
@@ -21,9 +20,9 @@ public class TriggerEventDefinitionConverterTest {
       .setFunctionResolver(functionResolver)
       .build();
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testInitializeWithoutFunctionResolver() {
-    TriggerEventDefinitionConverter.builder().build();
+    assertThrows(RuntimeException.class, () -> TriggerEventDefinitionConverter.builder().build());
   }
 
   @Test

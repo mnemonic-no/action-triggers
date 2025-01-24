@@ -4,10 +4,9 @@ import no.mnemonic.services.triggers.api.exceptions.InvalidArgumentException;
 import no.mnemonic.services.triggers.api.exceptions.ObjectNotFoundException;
 import no.mnemonic.services.triggers.api.model.v1.TriggerEventDefinition;
 import no.mnemonic.services.triggers.api.request.v1.TriggerEventDefinitionGetByServiceEventRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TriggerEventDefinitionGetByServiceEventDelegateTest extends AbstractDelegateTest {
 
@@ -16,48 +15,53 @@ public class TriggerEventDefinitionGetByServiceEventDelegateTest extends Abstrac
       .setEntityConverter(createTriggerEventDefinitionEntityConverter())
       .build();
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testInitializeDelegateWithoutEntitiesSupplier() {
-    TriggerEventDefinitionGetByServiceEventDelegate.builder()
+    assertThrows(RuntimeException.class, () -> TriggerEventDefinitionGetByServiceEventDelegate.builder()
         .setEntityConverter(createTriggerEventDefinitionEntityConverter())
-        .build();
+        .build());
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testInitializeDelegateWithoutEntityConverter() {
-    TriggerEventDefinitionGetByServiceEventDelegate.builder()
+    assertThrows(RuntimeException.class, () -> TriggerEventDefinitionGetByServiceEventDelegate.builder()
         .setEntitiesSupplier(createTriggerEventDefinitionEntitiesSupplier())
-        .build();
+        .build());
   }
 
-  @Test(expected = InvalidArgumentException.class)
-  public void testHandleWithoutRequest() throws Exception {
-    delegate.handle(null);
+  @Test
+  public void testHandleWithoutRequest() {
+    assertThrows(InvalidArgumentException.class, () -> delegate.handle(null));
   }
 
-  @Test(expected = InvalidArgumentException.class)
-  public void testHandleWithoutServiceParameter() throws Exception {
-    delegate.handle(new TriggerEventDefinitionGetByServiceEventRequest().setEvent("event"));
+  @Test
+  public void testHandleWithoutServiceParameter() {
+    assertThrows(InvalidArgumentException.class,
+        () -> delegate.handle(new TriggerEventDefinitionGetByServiceEventRequest().setEvent("event")));
   }
 
-  @Test(expected = InvalidArgumentException.class)
-  public void testHandleWithoutEventParameter() throws Exception {
-    delegate.handle(new TriggerEventDefinitionGetByServiceEventRequest().setService("service"));
+  @Test
+  public void testHandleWithoutEventParameter() {
+    assertThrows(InvalidArgumentException.class,
+        () -> delegate.handle(new TriggerEventDefinitionGetByServiceEventRequest().setService("service")));
   }
 
-  @Test(expected = ObjectNotFoundException.class)
-  public void testHandleServiceMismatch() throws Exception {
-    delegate.handle(new TriggerEventDefinitionGetByServiceEventRequest().setService("something").setEvent("event1"));
+  @Test
+  public void testHandleServiceMismatch() {
+    assertThrows(ObjectNotFoundException.class,
+        () -> delegate.handle(new TriggerEventDefinitionGetByServiceEventRequest().setService("something").setEvent("event1")));
   }
 
-  @Test(expected = ObjectNotFoundException.class)
-  public void testHandleEventMismatch() throws Exception {
-    delegate.handle(new TriggerEventDefinitionGetByServiceEventRequest().setService("service1").setEvent("something"));
+  @Test
+  public void testHandleEventMismatch() {
+    assertThrows(ObjectNotFoundException.class,
+        () -> delegate.handle(new TriggerEventDefinitionGetByServiceEventRequest().setService("service1").setEvent("something")));
   }
 
-  @Test(expected = ObjectNotFoundException.class)
-  public void testHandleNotMatchingBoth() throws Exception {
-    delegate.handle(new TriggerEventDefinitionGetByServiceEventRequest().setService("service1").setEvent("event2"));
+  @Test
+  public void testHandleNotMatchingBoth() {
+    assertThrows(ObjectNotFoundException.class,
+        () -> delegate.handle(new TriggerEventDefinitionGetByServiceEventRequest().setService("service1").setEvent("event2")));
   }
 
   @Test

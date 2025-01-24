@@ -12,7 +12,7 @@ import java.util.Map;
  * An action will be executed in the following order:
  * <ol>
  * <li>
- * An instance of the action will be created using {@link Class#newInstance()}. Because of this, every implementation
+ * An instance of the action will be created using the class's default constructor. Because of this, every implementation
  * has to provide a public nullary constructor. Only generic initialization of the action should be performed in this
  * step, such has initializing libraries, etc.
  * </li>
