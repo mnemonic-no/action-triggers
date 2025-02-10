@@ -17,8 +17,8 @@ import no.mnemonic.services.triggers.service.dao.TriggerRuleEntity;
 import no.mnemonic.services.triggers.service.dao.YamlReader;
 import no.mnemonic.services.triggers.service.delegates.*;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.nio.file.Paths;
 import java.util.UUID;
 import java.util.function.Function;

@@ -14,7 +14,7 @@ import no.mnemonic.services.triggers.pipeline.api.SubmissionException;
 import no.mnemonic.services.triggers.pipeline.api.TriggerEvent;
 import no.mnemonic.services.triggers.pipeline.api.TriggerEventConsumer;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 

@@ -47,7 +47,7 @@
     <commons.jexl.version>3.4.0</commons.jexl.version>
     <http.components.version>5.4.1</http.components.version>
     <jackson.version>2.18.2</jackson.version>
-    <jakarta.inject.version>1.0.5</jakarta.inject.version>
+    <jakarta.inject.version>2.0.1</jakarta.inject.version>
     <junit.jupiter.version>5.11.4</junit.jupiter.version>
     <mockito.version>5.15.2</mockito.version>
     <wiremock.version>3.10.0</wiremock.version>
